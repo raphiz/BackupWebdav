@@ -10,7 +10,6 @@ set -e
 # ## TODO
 # * Write the whole Duration into the mail!
 # * Run script as root - OR how can webdav be mounted else?
-# * Only send email if RECIPIENT is provided
 # * Check if the mountpoint is empty
 # * Allow external configuration using environemnt variables or source 
 # * Rename/Refactor the `Main Code` section. Fucntion?
@@ -180,8 +179,10 @@ echo "Backup done! Archive created at $TODAY_FOLDER.tar.gz"
 
 # A confirmation email is sent to notify the responsible person.
 # The log file is attached.
-echo "Yay! The backup is complete!" | mail -s "Backup complete!" -a $STDOUT_LOG -r $SENDER $RECIPIENT
-
-# The log file is deleted.
-rm $STDOUT_LOG
+if [ "$RECIPIENT" != "" ];then
+  echo "Yay! The backup is complete!" | mail -s "Backup complete!" -a $STDOUT_LOG -r $SENDER $RECIPIENT
+  rm $STDOUT_LOG
+else
+  echo "Done! Checkout the log at $STDOUT_LOG"
+fi
 
