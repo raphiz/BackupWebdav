@@ -17,11 +17,12 @@ if [ `git rev-parse --abbrev-ref HEAD` == "master" ]; then
     git add index.html
     git commit -a -m "Sync docs from master branch to gh-pages"
 
+    echo "Documentation regenerated! Don't forget to push manually!"
+    # This would perform an autopush: git push origin gh-pages
+
     # Finally, switch back to the master branch and exit block
     git checkout master
 
-    # Autopush
-    # git push origin gh-pages
 
 fi
 
