@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Link this into the git hooks directory:
+# Go into the Project root and run:
+# ln -s ../../hooks/post-commit .git/hooks/post-commit
+
+if [ `git rev-parse --abbrev-ref HEAD` == "master" ]; then
+    
+    echo "Regenerating Documentation"
+
+    TEMP=$(mktemp)
+    shocco backup_webdav.sh > $TEMP
+
+    git checkout gh-pages
+
+    mv $TEMP index.html
+
+    git add index.html
+    git commit -a -m "Sync docs from master branch to gh-pages"
+
+    # Finally, switch back to the master branch and exit block
+    git checkout master
+
+    # Autopush
+    # git push origin gh-pages
+
+fi
+
