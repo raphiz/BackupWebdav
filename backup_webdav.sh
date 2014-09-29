@@ -35,7 +35,7 @@ set -e
 # ## Usage and Prerequisites
 # This script aims to perform backups from webdav shares.
 # 
-# Usage : webdav_backup.sh 
+# Usage : backup_webdav.sh
 # 
 # ### Trust the servers SSL Certificate
 # Before you start, you have to ensure you trust the servers SSL certifcate.
