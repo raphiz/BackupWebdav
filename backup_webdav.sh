@@ -54,10 +54,33 @@ set -e
 
 # ## Configuration
 
+# The configuration file to read specific values from. 
+# By default, the first argument of the script is used here.
+configfile=$1
+
+# ## Read Configurations Method
+# A secure way to read configuration values from a given configuration file.
+# The method is called with the key name to load as first argument.
+# If the configuration file exists and declares the variable (eg. FOO=BAA),
+# the local variable (given as first argument) is overridden with the string value of the
+# defined value of the configuration file 
+function read_configuration_value {
+	if [ -f "$configfile" ]; then
+		key=$1
+		variable=`sed -n "s/^$key= *//p" $configfile`
+		if [ "$variable" != "" ];then
+			# Aahhhrg! Eval is Evil!
+			eval "$key"='$variable'
+		fi
+	fi
+}
+
+
 # The variable `DAV_URL` contains the address of the webdav share to backup,
 # for example `https://example.com:80`.
 # _Please do not add a trailing slash._
 DAV_URL="https://example.com:80"
+read_configuration_value 'DAV_URL'
 
 # The `DAV_SOURCE` contains a relative path on the webdav share 
 # pointing to the directory to backup. If the whole share shall
@@ -65,25 +88,31 @@ DAV_URL="https://example.com:80"
 # variable below.
 # _Please do not add a trailing slash._
 DAV_SOURCE="/"
+read_configuration_value 'DAV_SOURCE'
 
 # `DAV_USER` represents the name of the user to connect to the webdav share.
 DAV_USER="backup"
+read_configuration_value 'DAV_USER'
 
 # The `DAV_PASSWORD` variable contains the password of the user used to connect
 # to the webdav share. Yes, plain text passwords ARE evil ... :(
 DAV_PASSWORD="top-secrit"
+read_configuration_value 'DAV_PASSWORD'
 
 # An email is sent at the end to the `RECIPIENT` address using the `mail` command.
 # If this variable is empty, no email is sent.
-RECIPIENT="notify@example.com"
+RECIPIENT=""
+read_configuration_value 'RECIPIENT'
 
 # The `SENDER` E-Mail adress is passed to `mail` to be used as sender address.
-SENDER="notify@example.com"
+SENDER=""
+read_configuration_value 'SENDER'
 
 # The `LOCAL_MOUNTPOINT` points to where in the local file system the webdav share will be
 # mountet temporarly. Note that this directory must be empty if it already exists.
 # _Please do not add a trailing slash._
 LOCAL_MOUNTPOINT="/mnt/backup"
+read_configuration_value 'LOCAL_MOUNTPOINT'
 
 # The backup archives as well as a directory called mirror will be stored
 # in `LOCAL_BACKUP_DESTINATION`. This is the effective backup destination.
@@ -91,18 +120,19 @@ LOCAL_MOUNTPOINT="/mnt/backup"
 # other data. This could potentially break the script.
 # _Please do not add a trailing slash._
 LOCAL_BACKUP_DESTINATION="/backup"
+read_configuration_value 'LOCAL_BACKUP_DESTINATION'
 
 # The `RSYNC_OPTIONS` are passed to rsync. `-azvh --delete` is the highly recommended
 # default. If this is modified wrongly, the script might not work properly anymore - so be careful!
 # You can add here for example exclude directives etc. Checkout the rsync manpage for further details.
 RSYNC_OPTIONS="-azvh --delete"
+read_configuration_value 'RSYNC_OPTIONS'
 
-# Load configuration from external file if it exists
-# This will be optimized....
-if [ -e "./config.sh" ]; then
-	source "./config.sh"
-fi
-
+# If the `MIRROR_ONLY` value is set to true, the webdav share is only mirrored to the
+# mirror directory. The mirror directory will not be archived in this case!
+MIRROR_ONLY="false"
+read_configuration_value 'MIRROR_ONLY'
+MIRROR_ONLY=$(echo $MIRROR_ONLY | awk '{print tolower($0)}')
 
 # ## Main
 # The configuration section ENDS here...Do not modify the following contents unless
@@ -163,24 +193,29 @@ $DAV_PASSWORD" >>$STDOUT_LOG
 
 # After succesful mounting, the syncronization can start. The synchronization
 # is based on rsync.
-echo "Synchronizing data...(this can take a veeeery long time...)"
+echo "Mirroring webdav share...(this can take a veeeery long time...)"
 rsync $RSYNC_OPTIONS "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY">>"$STDOUT_LOG"
 
 # After the sync is done, the webdav share can be unmounted.
 echo "Unmount the webdav share..."
 sudo umount "$LOCAL_MOUNTPOINT">>"$STDOUT_LOG"
 
-# The mirror directory is now archived and compressed.
-echo "Creating backup archive...."
-cd "$MIRROR_DIRECTORY"
-tar cfz "../$TODAY_FOLDER.tar.gz" * >>"$STDOUT_LOG"
+if [ "$MIRROR_ONLY" == "true" ]; then
+	echo "Skipping archive creation (mirror-only mode is on)"
+else
 
-echo "Backup done! Archive created at $TODAY_FOLDER.tar.gz"
+	# The mirror directory is now archived and compressed.
+	echo "Creating backup archive....(this can take quite a bit if a lot of data has to be compressed"
+	cd "$MIRROR_DIRECTORY"
+	tar cfz "../$TODAY_FOLDER.tar.gz" * >>"$STDOUT_LOG"
+	echo "Backup done! Archive created at $TODAY_FOLDER.tar.gz"	
+fi
 
 # A confirmation email is sent to notify the responsible person.
 # The log file is attached.
 if [ "$RECIPIENT" != "" ];then
-  echo "Yay! The backup is complete!" | mail -s "Backup complete!" -a $STDOUT_LOG -r $SENDER $RECIPIENT
+  echo "The Backup with timestam $TODAY_FOLDER is done!\
+  Checkout the attached log file for details."  | mail -s "Backup complete" -a $STDOUT_LOG -r $SENDER $RECIPIENT
   rm $STDOUT_LOG
 else
   echo "Done! Checkout the log at $STDOUT_LOG"
