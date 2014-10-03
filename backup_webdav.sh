@@ -34,7 +34,7 @@ set -e
 # ## Usage and Prerequisites
 # This script aims to perform backups from webdav shares.
 # 
-# Usage : backup_webdav.sh
+# Usage : backup_webdav.sh [configuration_file]
 # 
 # ### Trust the servers SSL Certificate
 # Before you start, you have to ensure you trust the servers SSL certifcate.
@@ -63,24 +63,41 @@ configfile=$1
 # The method is called with the key name to load as first argument.
 # If the configuration file exists and declares the variable (eg. FOO=BAA),
 # the local variable (given as first argument) is overridden with the string value of the
-# defined value of the configuration file 
+# defined value of the configuration file.
+# If "true" is passed as a second argument, the 
 function read_configuration_value {
+	configuration_name=$1
+	
+	# If a configuration file is provided, parse the given value and 
+	# assign it
 	if [ -f "$configfile" ]; then
-		key=$1
-		variable=`sed -n "s/^$key= *//p" $configfile`
+		variable=`sed -n "s/^$configuration_name= *//p" $configfile`
 		if [ "$variable" != "" ];then
-			# Aahhhrg! Eval is Evil!
-			eval "$key"='$variable'
+			eval "$configuration_name"='$variable' # Aahhhrg! Eval is Evil!
 		fi
 	fi
+
+	# Evaluate if the given configuration is required as well as
+	# the contents of the variable with the name.
+	required=$(echo $2 | awk '{print tolower($0)}')
+
+	value=`(set -o posix ; set )| sed -n "s/^$configuration_name= *//p"`	
+	
+
+	# Stop execution if a required varaible is empty/not set
+	if [ "$required" == "true"  ] && [ "$value" == "" ];then
+		echo "No value set for configuration $configuration_name. Please provide one in a config file or inside the script"
+		exit 1
+	fi
+	exit 1
 }
 
 
 # The variable `DAV_URL` contains the address of the webdav share to backup,
-# for example `https://example.com:80`.
+# for example `https://example.com:80`. 
 # _Please do not add a trailing slash._
-DAV_URL="https://example.com:80"
-read_configuration_value 'DAV_URL'
+DAV_URL=""
+read_configuration_value 'DAV_URL' true
 
 # The `DAV_SOURCE` contains a relative path on the webdav share 
 # pointing to the directory to backup. If the whole share shall
@@ -88,50 +105,50 @@ read_configuration_value 'DAV_URL'
 # variable below.
 # _Please do not add a trailing slash._
 DAV_SOURCE="/"
-read_configuration_value 'DAV_SOURCE'
+read_configuration_value 'DAV_SOURCE' true
 
 # `DAV_USER` represents the name of the user to connect to the webdav share.
-DAV_USER="backup"
-read_configuration_value 'DAV_USER'
+DAV_USER=""
+read_configuration_value 'DAV_USER' true
 
 # The `DAV_PASSWORD` variable contains the password of the user used to connect
 # to the webdav share. Yes, plain text passwords ARE evil ... :(
-DAV_PASSWORD="top-secrit"
-read_configuration_value 'DAV_PASSWORD'
+DAV_PASSWORD=""
+read_configuration_value 'DAV_PASSWORD'  true
 
 # An email is sent at the end to the `RECIPIENT` address using the `mail` command.
 # If this variable is empty, no email is sent.
 RECIPIENT=""
-read_configuration_value 'RECIPIENT'
+read_configuration_value 'RECIPIENT' false
 
 # The `SENDER` E-Mail adress is passed to `mail` to be used as sender address.
 SENDER=""
-read_configuration_value 'SENDER'
+read_configuration_value 'SENDER' false
 
 # The `LOCAL_MOUNTPOINT` points to where in the local file system the webdav share will be
 # mountet temporarly. Note that this directory must be empty if it already exists.
 # _Please do not add a trailing slash._
 LOCAL_MOUNTPOINT="/mnt/backup"
-read_configuration_value 'LOCAL_MOUNTPOINT'
+read_configuration_value 'LOCAL_MOUNTPOINT' true
 
 # The backup archives as well as a directory called mirror will be stored
 # in `LOCAL_BACKUP_DESTINATION`. This is the effective backup destination.
 # This directory should ONLY be used for this script and not contain any 
 # other data. This could potentially break the script.
 # _Please do not add a trailing slash._
-LOCAL_BACKUP_DESTINATION="/backup"
-read_configuration_value 'LOCAL_BACKUP_DESTINATION'
+LOCAL_BACKUP_DESTINATION=""
+read_configuration_value 'LOCAL_BACKUP_DESTINATION' true
 
 # The `RSYNC_OPTIONS` are passed to rsync. `-azvh --delete` is the highly recommended
 # default. If this is modified wrongly, the script might not work properly anymore - so be careful!
 # You can add here for example exclude directives etc. Checkout the rsync manpage for further details.
 RSYNC_OPTIONS="-azvh --delete"
-read_configuration_value 'RSYNC_OPTIONS'
+read_configuration_value 'RSYNC_OPTIONS' true
 
 # If the `MIRROR_ONLY` value is set to true, the webdav share is only mirrored to the
 # mirror directory. The mirror directory will not be archived in this case!
 MIRROR_ONLY="false"
-read_configuration_value 'MIRROR_ONLY'
+read_configuration_value 'MIRROR_ONLY' false
 MIRROR_ONLY=$(echo $MIRROR_ONLY | awk '{print tolower($0)}')
 
 # ## Main
