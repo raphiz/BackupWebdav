@@ -2,4 +2,5 @@
 
 This script aims to perform backups from webdav shares.
 
-Work is in progress...
+For details and installation instructions go to the project website:
+https://raphiz.github.io/BackupWebdav/
