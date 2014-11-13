@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-set -e
-
+#set -e
 # **Author** Raphael Zimmermann <development@raphael.li>
 # 
 # **License** [BSD-3-Clause](http://opensource.org/licenses/BSD-3-Clause)
@@ -16,6 +15,12 @@ set -e
 # * Log everything into the log file (see http://mostlyunixish.franzoni.eu/blog/2013/10/08/quick-log-for-bash-scripts/)
 # * Rename variables (TODAY) and stuff like this
 # * Fix Extend usage/prerequisites
+# 
+# 
+# # Requirements
+# Please enusre that the following software is installed on the client: 
+# * unison
+# * davfs2
 # 
 # ## WARNING
 # This is not a complete backup solution! It was designed to be a foundation for a custom
@@ -51,13 +56,13 @@ set -e
 # 
 # ### Setup `mail` (optional)
 # You must also have setup mail properly!
-
+#
 # ## Configuration
-
+#
 # The configuration file to read specific values from. 
 # By default, the first argument of the script is used here.
 configfile=$1
-
+#
 # ## Read Configurations Method
 # A secure way to read configuration values from a given configuration file.
 # The method is called with the key name to load as first argument.
@@ -89,7 +94,6 @@ function read_configuration_value {
 		echo "No value set for configuration $configuration_name. Please provide one in a config file or inside the script"
 		exit 1
 	fi
-	exit 1
 }
 
 
@@ -101,8 +105,8 @@ read_configuration_value 'DAV_URL' true
 
 # The `DAV_SOURCE` contains a relative path on the webdav share 
 # pointing to the directory to backup. If the whole share shall
-# be backed up, leave this empty. For specific excludes, checkout the `RSYNC_OPTIONS`
-# variable below.
+# be backed up, leave this empty. If files/directories must be excluded, 
+# use the `~/.unison/default.prf` file.
 # _Please do not add a trailing slash._
 DAV_SOURCE="/"
 read_configuration_value 'DAV_SOURCE' true
@@ -139,11 +143,11 @@ read_configuration_value 'LOCAL_MOUNTPOINT' true
 LOCAL_BACKUP_DESTINATION=""
 read_configuration_value 'LOCAL_BACKUP_DESTINATION' true
 
-# The `RSYNC_OPTIONS` are passed to rsync. `-azvh --delete` is the highly recommended
+# The `UNISON_OPTIONS` are passed directly to unison. `` is the highly recommended
 # default. If this is modified wrongly, the script might not work properly anymore - so be careful!
-# You can add here for example exclude directives etc. Checkout the rsync manpage for further details.
-RSYNC_OPTIONS="-azvh --delete"
-read_configuration_value 'RSYNC_OPTIONS' true
+# Checkout the unison documentation for further details.
+UNISON_OPTIONS="-auto"
+read_configuration_value 'UNISON_OPTIONS' true
 
 # If the `MIRROR_ONLY` value is set to true, the webdav share is only mirrored to the
 # mirror directory. The mirror directory will not be archived in this case!
@@ -154,7 +158,7 @@ MIRROR_ONLY=$(echo $MIRROR_ONLY | awk '{print tolower($0)}')
 # ## Main
 # The configuration section ENDS here...Do not modify the following contents unless
 # you know what you are doing! You have been warned...
-
+#
 # Temporary log file. This will be sent via email after successful execution.
 STDOUT_LOG=$(mktemp)
 
@@ -169,12 +173,10 @@ TODAY_FOLDER=$(date +%Y-%m-%d_%H-%M)
 # must be transfered every time.
 MIRROR_DIRECTORY="$LOCAL_BACKUP_DESTINATION/mirror"
 
-
 # The name of the last backed up archive is evaluated.
 # If the mirror directory does not exist yet, this archive will be extracted there to improve performance
 # by minimizing the network usage.
 PREVIOUS_FILE=$(find "$LOCAL_BACKUP_DESTINATION" -maxdepth 1 -type f | sort | awk '/./{line=$0} END{print line}')
-
 
 # The existance of the mirror directory is evaluated.
 if [ -d "$MIRROR_DIRECTORY" ]; then
@@ -208,10 +210,9 @@ sudo mount -t davfs $DAV_URL$DAV_SOURCE/ $LOCAL_MOUNTPOINT<<<"$DAV_USER
 $DAV_PASSWORD" >>$STDOUT_LOG
 #" 
 
-# After succesful mounting, the syncronization can start. The synchronization
-# is based on rsync.
+# After succesful mounting, the unison syncronization can begin.
 echo "Mirroring webdav share...(this can take a veeeery long time...)"
-rsync $RSYNC_OPTIONS "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY">>"$STDOUT_LOG"
+unison $UNISON_OPTIONS "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY">>"$STDOUT_LOG"
 
 # After the sync is done, the webdav share can be unmounted.
 echo "Unmount the webdav share..."

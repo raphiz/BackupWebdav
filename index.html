@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv='content-type' content='text/html;charset=utf-8'>
+    <title>backup_webdav.sh</title>
+      <link rel="stylesheet" media="all" href="https://jashkenas.github.io/docco/resources/linear/docco.css" />
+</head>
+<body>
+<div class="container">
+  <div class="page">
+        <div class="header"><h1>backup_webdav.sh</h1></div>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;&#97;&#105;&#108;&#116;&#111;:d&#x65;&#x76;e&#108;&#111;&#112;&#109;&#101;&#110;&#x74;&#64;&#114;&#x61;&#112;&#104;a&#x65;l&#46;&#x6C;i">d&#x65;&#x76;e&#108;&#111;&#112;&#109;&#101;&#110;&#x74;&#64;&#114;&#x61;&#112;&#104;a&#x65;l&#46;&#x6C;i</a></p>
+
+<p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
+
+<p>Copyright (c) 2014, Raphael Zimmermann, All rights reserved.</p>
+
+<h2>TODO</h2>
+
+<ul>
+<li>Write the whole Duration into the mail!</li>
+<li>Run script as root - OR how can webdav be mounted else?</li>
+<li>Check if the mountpoint is empty</li>
+<li>Allow external configuration using environemnt variables or source</li>
+<li>Rename/Refactor the <code>Main Code</code> section. Fucntion?</li>
+<li>Log everything into the log file (see http://mostlyunixish.franzoni.eu/blog/2013/10/08/quick-log-for-bash-scripts/)</li>
+<li>Rename variables (TODAY) and stuff like this</li>
+<li>Fix Extend usage/prerequisites</li>
+</ul>
+
+<h1>Requirements</h1>
+
+<p>Please enusre that the following software is installed on the client:
+* unison
+* davfs2</p>
+
+<h2>WARNING</h2>
+
+<p>This is not a complete backup solution! It was designed to be a foundation for a custom
+backup solution. Don't use this in production or any safety-critical environments!</p>
+
+<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+
+<h2>Usage and Prerequisites</h2>
+
+<p>This script aims to perform backups from webdav shares.</p>
+
+<p>Usage : backup<em>webdav.sh [configuration</em>file]</p>
+
+<h3>Trust the servers SSL Certificate</h3>
+
+<p>Before you start, you have to ensure you trust the servers SSL certifcate.
+Therefore, copy the PEM with the full chain to /etc/davfs2/certs/, for example:</p>
+
+<pre><code>cp MY_CERTIFICATE.pem /etc/davfs2/certs/MY_CERTIFICATE.pem
+</code></pre>
+
+<p>Next, uncomment the following line in the /etc/davfs2/davfs2.conf and replace
+the backup_cert with the name of the previously copied certificate name.</p>
+
+<pre><code>trust_server_cert MY_CERTIFICATE
+</code></pre>
+
+<p>See http://ubuntuforums.org/showthread.php?t=1034909 for more details on this...</p>
+
+<h3>Setup <code>mail</code> (optional)</h3>
+
+<p>You must also have setup mail properly!</p>
+
+<h2>Configuration</h2>
+
+<p>The configuration file to read specific values from.
+By default, the first argument of the script is used here.</p>
+
+<div class="highlight"><pre>
+<span class="c">#!/usr/bin/env bash</span>
+<span class="c">#set -e</span>
+<span class="nv">configfile</span><span class="o">=</span><span class="nv">$1</span>
+</pre></div>
+
+<h2>Read Configurations Method</h2>
+
+<p>A secure way to read configuration values from a given configuration file.
+The method is called with the key name to load as first argument.
+If the configuration file exists and declares the variable (eg. FOO=BAA),
+the local variable (given as first argument) is overridden with the string value of the
+defined value of the configuration file.
+If "true" is passed as a second argument, the </p>
+
+<div class="highlight"><pre>
+<span class="k">function </span>read_configuration_value <span class="o">{</span>
+	<span class="nv">configuration_name</span><span class="o">=</span><span class="nv">$1</span>
+	
+</pre></div>
+
+<p>If a configuration file is provided, parse the given value and 
+assign it</p>
+
+<div class="highlight"><pre>
+	<span class="k">if</span> <span class="o">[</span> -f <span class="s2">&quot;$configfile&quot;</span> <span class="o">]</span>; <span class="k">then</span>
+<span class="k">		</span><span class="nv">variable</span><span class="o">=</span><span class="sb">`</span>sed -n <span class="s2">&quot;s/^$configuration_name= *//p&quot;</span> <span class="nv">$configfile</span><span class="sb">`</span>
+		<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;$variable&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span>;<span class="k">then</span>
+<span class="k">			</span><span class="nb">eval</span> <span class="s2">&quot;$configuration_name&quot;</span><span class="o">=</span><span class="s1">&#39;$variable&#39;</span> <span class="c"># Aahhhrg! Eval is Evil!</span>
+		<span class="k">fi</span>
+<span class="k">	fi</span>
+
+</pre></div>
+
+<p>Evaluate if the given configuration is required as well as
+the contents of the variable with the name.</p>
+
+<div class="highlight"><pre>
+	<span class="nv">required</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="nv">$2</span> | awk <span class="s1">&#39;{print tolower($0)}&#39;</span><span class="k">)</span>
+
+	<span class="nv">value</span><span class="o">=</span><span class="sb">`</span><span class="o">(</span><span class="nb">set</span> -o posix ; <span class="nb">set</span> <span class="o">)</span>| sed -n <span class="s2">&quot;s/^$configuration_name= *//p&quot;</span><span class="sb">`</span>	
+	
+
+</pre></div>
+
+<p>Stop execution if a required varaible is empty/not set</p>
+
+<div class="highlight"><pre>
+	<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;$required&quot;</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span>  <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="o">[</span> <span class="s2">&quot;$value&quot;</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span>;<span class="k">then</span>
+<span class="k">		</span><span class="nb">echo</span> <span class="s2">&quot;No value set for configuration $configuration_name. Please provide one in a config file or inside the script&quot;</span>
+		<span class="nb">exit </span>1
+	<span class="k">fi</span>
+<span class="o">}</span>
+
+
+</pre></div>
+
+<p>The variable <code>DAV_URL</code> contains the address of the webdav share to backup,
+for example <code>https://example.com:80</code>. 
+<em>Please do not add a trailing slash.</em></p>
+
+<div class="highlight"><pre>
+<span class="nv">DAV_URL</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+read_configuration_value <span class="s1">&#39;DAV_URL&#39;</span> <span class="nb">true</span>
+
+</pre></div>
+
+<p>The <code>DAV_SOURCE</code> contains a relative path on the webdav share 
+pointing to the directory to backup. If the whole share shall
+be backed up, leave this empty. If files/directories must be excluded, 
+use the <code>~/.unison/default.prf</code> file.
+<em>Please do not add a trailing slash.</em></p>
+
+<div class="highlight"><pre>
+<span class="nv">DAV_SOURCE</span><span class="o">=</span><span class="s2">&quot;/&quot;</span>
+read_configuration_value <span class="s1">&#39;DAV_SOURCE&#39;</span> <span class="nb">true</span>
+
+</pre></div>
+
+<p><code>DAV_USER</code> represents the name of the user to connect to the webdav share.</p>
+
+<div class="highlight"><pre>
+<span class="nv">DAV_USER</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+read_configuration_value <span class="s1">&#39;DAV_USER&#39;</span> <span class="nb">true</span>
+
+</pre></div>
+
+<p>The <code>DAV_PASSWORD</code> variable contains the password of the user used to connect
+to the webdav share. Yes, plain text passwords ARE evil ... :(</p>
+
+<div class="highlight"><pre>
+<span class="nv">DAV_PASSWORD</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+read_configuration_value <span class="s1">&#39;DAV_PASSWORD&#39;</span>  <span class="nb">true</span>
+
+</pre></div>
+
+<p>An email is sent at the end to the <code>RECIPIENT</code> address using the <code>mail</code> command.
+If this variable is empty, no email is sent.</p>
+
+<div class="highlight"><pre>
+<span class="nv">RECIPIENT</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+read_configuration_value <span class="s1">&#39;RECIPIENT&#39;</span> <span class="nb">false</span>
+
+</pre></div>
+
+<p>The <code>SENDER</code> E-Mail adress is passed to <code>mail</code> to be used as sender address.</p>
+
+<div class="highlight"><pre>
+<span class="nv">SENDER</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+read_configuration_value <span class="s1">&#39;SENDER&#39;</span> <span class="nb">false</span>
+
+</pre></div>
+
+<p>The <code>LOCAL_MOUNTPOINT</code> points to where in the local file system the webdav share will be
+mountet temporarly. Note that this directory must be empty if it already exists.
+<em>Please do not add a trailing slash.</em></p>
+
+<div class="highlight"><pre>
+<span class="nv">LOCAL_MOUNTPOINT</span><span class="o">=</span><span class="s2">&quot;/mnt/backup&quot;</span>
+read_configuration_value <span class="s1">&#39;LOCAL_MOUNTPOINT&#39;</span> <span class="nb">true</span>
+
+</pre></div>
+
+<p>The backup archives as well as a directory called mirror will be stored
+in <code>LOCAL_BACKUP_DESTINATION</code>. This is the effective backup destination.
+This directory should ONLY be used for this script and not contain any 
+other data. This could potentially break the script.
+<em>Please do not add a trailing slash.</em></p>
+
+<div class="highlight"><pre>
+<span class="nv">LOCAL_BACKUP_DESTINATION</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+read_configuration_value <span class="s1">&#39;LOCAL_BACKUP_DESTINATION&#39;</span> <span class="nb">true</span>
+
+</pre></div>
+
+<p>The <code>UNISON_OPTIONS</code> are passed directly to unison. `` is the highly recommended
+default. If this is modified wrongly, the script might not work properly anymore - so be careful!
+Checkout the unison documentation for further details.</p>
+
+<div class="highlight"><pre>
+<span class="nv">UNISON_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-auto&quot;</span>
+read_configuration_value <span class="s1">&#39;UNISON_OPTIONS&#39;</span> <span class="nb">true</span>
+
+</pre></div>
+
+<p>If the <code>MIRROR_ONLY</code> value is set to true, the webdav share is only mirrored to the
+mirror directory. The mirror directory will not be archived in this case!</p>
+
+<div class="highlight"><pre>
+<span class="nv">MIRROR_ONLY</span><span class="o">=</span><span class="s2">&quot;false&quot;</span>
+read_configuration_value <span class="s1">&#39;MIRROR_ONLY&#39;</span> <span class="nb">false</span>
+<span class="nv">MIRROR_ONLY</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="nv">$MIRROR_ONLY</span> | awk <span class="s1">&#39;{print tolower($0)}&#39;</span><span class="k">)</span>
+
+</pre></div>
+
+<h2>Main</h2>
+
+<p>The configuration section ENDS here...Do not modify the following contents unless
+you know what you are doing! You have been warned...</p>
+
+<p>Temporary log file. This will be sent via email after successful execution.</p>
+
+<div class="highlight"><pre>
+<span class="nv">STDOUT_LOG</span><span class="o">=</span><span class="k">$(</span>mktemp<span class="k">)</span>
+
+</pre></div>
+
+<p><code>TODAY_FOLDER</code> defines how the backup achive is called.
+The naming is important for the whole script beacuse some of its logic
+is dependant on the sorting order. When sort all files in the <code>LOCAL_BACKUP_DESTINATION</code>, the last one
+must be the most up-to-date backup archive.</p>
+
+<div class="highlight"><pre>
+<span class="nv">TODAY_FOLDER</span><span class="o">=</span><span class="k">$(</span>date +%Y-%m-%d_%H-%M<span class="k">)</span>
+
+</pre></div>
+
+<p>The mirror directory stores a mirrored version of the webdav share.
+By having this mirror directory, the performance is much better since not all files
+must be transfered every time.</p>
+
+<div class="highlight"><pre>
+<span class="nv">MIRROR_DIRECTORY</span><span class="o">=</span><span class="s2">&quot;$LOCAL_BACKUP_DESTINATION/mirror&quot;</span>
+
+</pre></div>
+
+<p>The name of the last backed up archive is evaluated.
+If the mirror directory does not exist yet, this archive will be extracted there to improve performance
+by minimizing the network usage.</p>
+
+<div class="highlight"><pre>
+<span class="nv">PREVIOUS_FILE</span><span class="o">=</span><span class="k">$(</span>find <span class="s2">&quot;$LOCAL_BACKUP_DESTINATION&quot;</span> -maxdepth 1 -type f | sort | awk <span class="s1">&#39;/./{line=$0} END{print line}&#39;</span><span class="k">)</span>
+
+</pre></div>
+
+<p>The existance of the mirror directory is evaluated.</p>
+
+<div class="highlight"><pre>
+<span class="k">if</span> <span class="o">[</span> -d <span class="s2">&quot;$MIRROR_DIRECTORY&quot;</span> <span class="o">]</span>; <span class="k">then</span>
+<span class="k">	</span><span class="nb">echo</span> <span class="s2">&quot;Using existing mirror directory....&quot;</span>
+<span class="k">else</span>
+</pre></div>
+
+<p>The mirror directory is created because does not exist yet.</p>
+
+<div class="highlight"><pre>
+	<span class="nb">echo</span> <span class="s2">&quot;No mirror directory found...it will be created...&quot;</span>
+	mkdir -p <span class="s2">&quot;$MIRROR_DIRECTORY&quot;</span>
+
+</pre></div>
+
+<p>To reduce network usage, the <code>PREVIOUS_FILE</code> is extracted into
+the empty mirror directory. Therefore, only the difference between
+the last backup and now has to be exchanged via the network.</p>
+
+<div class="highlight"><pre>
+	<span class="k">if</span> <span class="o">[</span> -e <span class="s2">&quot;$PREVIOUS_FILE&quot;</span> <span class="o">]</span>; <span class="k">then</span>
+<span class="k">		</span><span class="nb">echo</span> <span class="s2">&quot;Last backup archive was $PREVIOUS_FILE&quot;</span>
+		<span class="nb">echo</span> <span class="s2">&quot;Using last backed up archive as base to reduce transfer time&quot;</span>
+		tar -xf <span class="s2">&quot;$PREVIOUS_FILE&quot;</span> -C <span class="s2">&quot;$MIRROR_DIRECTORY&quot;</span>&gt;&gt;<span class="nv">$STDOUT_LOG</span>
+	<span class="k">else</span>
+<span class="k">		</span><span class="nb">echo</span> <span class="s2">&quot;no previous backup files found...&quot;</span>
+	<span class="k">fi</span>
+<span class="k">fi</span>
+
+</pre></div>
+
+<p>It's time to prepare the mount process. Therefore, the mountpoint is created
+if it does not yet exist.</p>
+
+<div class="highlight"><pre>
+<span class="k">if</span> <span class="o">[</span> ! -d <span class="s2">&quot;$LOCAL_MOUNTPOINT&quot;</span> <span class="o">]</span>; <span class="k">then</span>
+<span class="k">	</span>mkdir -p <span class="s2">&quot;$LOCAL_MOUNTPOINT&quot;</span>
+<span class="k">fi</span>
+
+</pre></div>
+
+<p>Next, the webdav share is mounted.</p>
+
+<div class="highlight"><pre>
+<span class="nb">echo</span> <span class="s2">&quot;Mounting webdav share....&quot;</span>
+sudo mount -t davfs <span class="nv">$DAV_URL$DAV_SOURCE</span>/ <span class="nv">$LOCAL_MOUNTPOINT</span><span class="o">&lt;&lt;&lt;</span><span class="s2">&quot;$DAV_USER</span>
+<span class="s2">$DAV_PASSWORD&quot;</span> &gt;&gt;<span class="nv">$STDOUT_LOG</span>
+<span class="c">#&quot; </span>
+
+</pre></div>
+
+<p>After succesful mounting, the unison syncronization can begin.</p>
+
+<div class="highlight"><pre>
+<span class="nb">echo</span> <span class="s2">&quot;Mirroring webdav share...(this can take a veeeery long time...)&quot;</span>
+unison <span class="nv">$UNISON_OPTIONS</span> <span class="s2">&quot;$LOCAL_MOUNTPOINT/&quot;</span> <span class="s2">&quot;$MIRROR_DIRECTORY&quot;</span>&gt;&gt;<span class="s2">&quot;$STDOUT_LOG&quot;</span>
+
+</pre></div>
+
+<p>After the sync is done, the webdav share can be unmounted.</p>
+
+<div class="highlight"><pre>
+<span class="nb">echo</span> <span class="s2">&quot;Unmount the webdav share...&quot;</span>
+sudo umount <span class="s2">&quot;$LOCAL_MOUNTPOINT&quot;</span>&gt;&gt;<span class="s2">&quot;$STDOUT_LOG&quot;</span>
+
+<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;$MIRROR_ONLY&quot;</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span> <span class="o">]</span>; <span class="k">then</span>
+<span class="k">	</span><span class="nb">echo</span> <span class="s2">&quot;Skipping archive creation (mirror-only mode is on)&quot;</span>
+<span class="k">else</span>
+
+</pre></div>
+
+<p>The mirror directory is now archived and compressed.</p>
+
+<div class="highlight"><pre>
+	<span class="nb">echo</span> <span class="s2">&quot;Creating backup archive....(this can take quite a bit if a lot of data has to be compressed&quot;</span>
+	<span class="nb">cd</span> <span class="s2">&quot;$MIRROR_DIRECTORY&quot;</span>
+	tar cfz <span class="s2">&quot;../$TODAY_FOLDER.tar.gz&quot;</span> * &gt;&gt;<span class="s2">&quot;$STDOUT_LOG&quot;</span>
+	<span class="nb">echo</span> <span class="s2">&quot;Backup done! Archive created at $TODAY_FOLDER.tar.gz&quot;</span>	
+<span class="k">fi</span>
+
+</pre></div>
+
+<p>A confirmation email is sent to notify the responsible person.
+The log file is attached.</p>
+
+<div class="highlight"><pre>
+<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;$RECIPIENT&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span>;<span class="k">then</span>
+<span class="k">  </span><span class="nb">echo</span> <span class="s2">&quot;The Backup with timestam $TODAY_FOLDER is done!\</span>
+<span class="s2">  Checkout the attached log file for details.&quot;</span>  | mail -s <span class="s2">&quot;Backup complete&quot;</span> -a <span class="nv">$STDOUT_LOG</span> -r <span class="nv">$SENDER</span> <span class="nv">$RECIPIENT</span>
+  rm <span class="nv">$STDOUT_LOG</span>
+<span class="k">else</span>
+<span class="k">  </span><span class="nb">echo</span> <span class="s2">&quot;Done! Checkout the log at $STDOUT_LOG&quot;</span>
+<span class="k">fi</span>
+
+
+
+</pre></div>
+
+<div class="highlight"><pre>
+
+</pre></div>
+  </div>
+</div>
+</body>
+</html>
