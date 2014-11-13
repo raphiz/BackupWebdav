@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="m&#x61;&#x69;&#108;&#x74;&#x6F;:&#x64;&#x65;&#x76;&#x65;&#x6C;&#111;&#112;&#109;&#x65;&#110;t&#64;&#x72;&#x61;&#112;&#104;&#x61;&#x65;&#108;&#x2E;&#x6C;&#105;">&#x64;&#x65;&#x76;&#x65;&#x6C;&#111;&#112;&#109;&#x65;&#110;t&#64;&#x72;&#x61;&#112;&#104;&#x61;&#x65;&#108;&#x2E;&#x6C;&#105;</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#97;&#105;&#108;&#x74;&#x6F;:&#100;&#101;v&#101;&#x6C;&#111;p&#109;&#101;n&#116;&#64;&#114;&#x61;&#112;&#104;&#97;&#101;&#108;&#46;&#x6C;&#x69;">&#100;&#101;v&#101;&#x6C;&#111;p&#109;&#101;n&#116;&#64;&#114;&#x61;&#112;&#104;&#97;&#101;&#108;&#46;&#x6C;&#x69;</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -27,6 +27,12 @@
 <li>Rename variables (TODAY) and stuff like this</li>
 <li>Fix Extend usage/prerequisites</li>
 </ul>
+
+<h1>Requirements</h1>
+
+<p>Please enusre that the following software is installed on the client:
+* unison
+* davfs2</p>
 
 <h2>WARNING</h2>
 
@@ -69,25 +75,15 @@ the backup_cert with the name of the previously copied certificate name.</p>
 
 <p>You must also have setup mail properly!</p>
 
-<div class="highlight"><pre>
-<span class="c">#!/usr/bin/env bash</span>
-<span class="nb">set</span> -e
-
-
-</pre></div>
-
 <h2>Configuration</h2>
 
-<div class="highlight"><pre>
-
-</pre></div>
-
-<p>The configuration file to read specific values from. 
+<p>The configuration file to read specific values from.
 By default, the first argument of the script is used here.</p>
 
 <div class="highlight"><pre>
+<span class="c">#!/usr/bin/env bash</span>
+<span class="c">#set -e</span>
 <span class="nv">configfile</span><span class="o">=</span><span class="nv">$1</span>
-
 </pre></div>
 
 <h2>Read Configurations Method</h2>
@@ -136,7 +132,6 @@ the contents of the variable with the name.</p>
 <span class="k">		</span><span class="nb">echo</span> <span class="s2">&quot;No value set for configuration $configuration_name. Please provide one in a config file or inside the script&quot;</span>
 		<span class="nb">exit </span>1
 	<span class="k">fi</span>
-<span class="k">	</span><span class="nb">exit </span>1
 <span class="o">}</span>
 
 
@@ -154,8 +149,8 @@ read_configuration_value <span class="s1">&#39;DAV_URL&#39;</span> <span class="
 
 <p>The <code>DAV_SOURCE</code> contains a relative path on the webdav share 
 pointing to the directory to backup. If the whole share shall
-be backed up, leave this empty. For specific excludes, checkout the <code>RSYNC_OPTIONS</code>
-variable below.
+be backed up, leave this empty. If files/directories must be excluded, 
+use the <code>~/.unison/default.prf</code> file.
 <em>Please do not add a trailing slash.</em></p>
 
 <div class="highlight"><pre>
@@ -220,13 +215,13 @@ read_configuration_value <span class="s1">&#39;LOCAL_BACKUP_DESTINATION&#39;</sp
 
 </pre></div>
 
-<p>The <code>RSYNC_OPTIONS</code> are passed to rsync. <code>-azvh --delete</code> is the highly recommended
+<p>The <code>UNISON_OPTIONS</code> are passed directly to unison. `` is the highly recommended
 default. If this is modified wrongly, the script might not work properly anymore - so be careful!
-You can add here for example exclude directives etc. Checkout the rsync manpage for further details.</p>
+Checkout the unison documentation for further details.</p>
 
 <div class="highlight"><pre>
-<span class="nv">RSYNC_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-azvh --delete&quot;</span>
-read_configuration_value <span class="s1">&#39;RSYNC_OPTIONS&#39;</span> <span class="nb">true</span>
+<span class="nv">UNISON_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-auto&quot;</span>
+read_configuration_value <span class="s1">&#39;UNISON_OPTIONS&#39;</span> <span class="nb">true</span>
 
 </pre></div>
 
@@ -244,10 +239,6 @@ read_configuration_value <span class="s1">&#39;MIRROR_ONLY&#39;</span> <span cla
 
 <p>The configuration section ENDS here...Do not modify the following contents unless
 you know what you are doing! You have been warned...</p>
-
-<div class="highlight"><pre>
-
-</pre></div>
 
 <p>Temporary log file. This will be sent via email after successful execution.</p>
 
@@ -273,7 +264,6 @@ must be transfered every time.</p>
 <div class="highlight"><pre>
 <span class="nv">MIRROR_DIRECTORY</span><span class="o">=</span><span class="s2">&quot;$LOCAL_BACKUP_DESTINATION/mirror&quot;</span>
 
-
 </pre></div>
 
 <p>The name of the last backed up archive is evaluated.
@@ -282,7 +272,6 @@ by minimizing the network usage.</p>
 
 <div class="highlight"><pre>
 <span class="nv">PREVIOUS_FILE</span><span class="o">=</span><span class="k">$(</span>find <span class="s2">&quot;$LOCAL_BACKUP_DESTINATION&quot;</span> -maxdepth 1 -type f | sort | awk <span class="s1">&#39;/./{line=$0} END{print line}&#39;</span><span class="k">)</span>
-
 
 </pre></div>
 
@@ -338,12 +327,11 @@ sudo mount -t davfs <span class="nv">$DAV_URL$DAV_SOURCE</span>/ <span class="nv
 
 </pre></div>
 
-<p>After succesful mounting, the syncronization can start. The synchronization
-is based on rsync.</p>
+<p>After succesful mounting, the unison syncronization can begin.</p>
 
 <div class="highlight"><pre>
 <span class="nb">echo</span> <span class="s2">&quot;Mirroring webdav share...(this can take a veeeery long time...)&quot;</span>
-rsync <span class="nv">$RSYNC_OPTIONS</span> <span class="s2">&quot;$LOCAL_MOUNTPOINT/&quot;</span> <span class="s2">&quot;$MIRROR_DIRECTORY&quot;</span>&gt;&gt;<span class="s2">&quot;$STDOUT_LOG&quot;</span>
+unison <span class="nv">$UNISON_OPTIONS</span> <span class="s2">&quot;$LOCAL_MOUNTPOINT/&quot;</span> <span class="s2">&quot;$MIRROR_DIRECTORY&quot;</span>&gt;&gt;<span class="s2">&quot;$STDOUT_LOG&quot;</span>
 
 </pre></div>
 
