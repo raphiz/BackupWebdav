@@ -1,66 +1,66 @@
 #!/usr/bin/env bash
 #set -e
 # **Author** Raphael Zimmermann <development@raphael.li>
-# 
+#
 # **License** [BSD-3-Clause](http://opensource.org/licenses/BSD-3-Clause)
-# 
+#
 # Copyright (c) 2014, Raphael Zimmermann, All rights reserved.
-# 
+#
 # ## TODO
 # * Write the whole Duration into the mail!
 # * Run script as root - OR how can webdav be mounted else?
 # * Check if the mountpoint is empty
-# * Allow external configuration using environemnt variables or source 
+# * Allow external configuration using environemnt variables or source
 # * Rename/Refactor the `Main Code` section. Fucntion?
 # * Log everything into the log file (see http://mostlyunixish.franzoni.eu/blog/2013/10/08/quick-log-for-bash-scripts/)
 # * Rename variables (TODAY) and stuff like this
 # * Fix Extend usage/prerequisites
-# 
-# 
+#
+#
 # # Requirements
-# Please enusre that the following software is installed on the client: 
-# 
+# Please enusre that the following software is installed on the client:
+#
 # * unison
 # * davfs2
-# 
+#
 # ## WARNING
 # This is not a complete backup solution! It was designed to be a foundation for a custom
 # backup solution. Don't use this in production or any safety-critical environments!
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
 # OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
 # THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
 # OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
 # HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 # TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 # ## Usage and Prerequisites
 # This script aims to perform backups from webdav shares.
-# 
+#
 # Usage : backup_webdav.sh [configuration_file]
-# 
+#
 # ### Trust the servers SSL Certificate
 # Before you start, you have to ensure you trust the servers SSL certifcate.
 # Therefore, copy the PEM with the full chain to /etc/davfs2/certs/, for example:
-# 	
+#
 # 	cp MY_CERTIFICATE.pem /etc/davfs2/certs/MY_CERTIFICATE.pem
-# 
+#
 # Next, uncomment the following line in the /etc/davfs2/davfs2.conf and replace
 # the backup_cert with the name of the previously copied certificate name.
-# 
+#
 # 	trust_server_cert MY_CERTIFICATE
-# 
+#
 # See http://ubuntuforums.org/showthread.php?t=1034909 for more details on this...
-# 
+#
 # ### Setup `mail` (optional)
 # You must also have setup mail properly!
 #
 # ## Configuration
 #
-# The configuration file to read specific values from. 
+# The configuration file to read specific values from.
 # By default, the first argument of the script is used here.
 configfile=$1
 #
@@ -70,11 +70,11 @@ configfile=$1
 # If the configuration file exists and declares the variable (eg. FOO=BAA),
 # the local variable (given as first argument) is overridden with the string value of the
 # defined value of the configuration file.
-# If "true" is passed as a second argument, the 
+# If "true" is passed as a second argument, the
 function read_configuration_value {
 	configuration_name=$1
-	
-	# If a configuration file is provided, parse the given value and 
+
+	# If a configuration file is provided, parse the given value and
 	# assign it
 	if [ -f "$configfile" ]; then
 		variable=`sed -n "s/^$configuration_name= *//p" $configfile`
@@ -87,8 +87,8 @@ function read_configuration_value {
 	# the contents of the variable with the name.
 	required=$(echo $2 | awk '{print tolower($0)}')
 
-	value=`(set -o posix ; set )| sed -n "s/^$configuration_name= *//p"`	
-	
+	value=`(set -o posix ; set )| sed -n "s/^$configuration_name= *//p"`
+
 
 	# Stop execution if a required varaible is empty/not set
 	if [ "$required" == "true"  ] && [ "$value" == "" ];then
@@ -99,14 +99,14 @@ function read_configuration_value {
 
 
 # The variable `DAV_URL` contains the address of the webdav share to backup,
-# for example `https://example.com:80`. 
+# for example `https://example.com:80`.
 # _Please do not add a trailing slash._
 DAV_URL=""
 read_configuration_value 'DAV_URL' true
 
-# The `DAV_SOURCE` contains a relative path on the webdav share 
+# The `DAV_SOURCE` contains a relative path on the webdav share
 # pointing to the directory to backup. If the whole share shall
-# be backed up, leave this empty. If files/directories must be excluded, 
+# be backed up, leave this empty. If files/directories must be excluded,
 # use the `~/.unison/default.prf` file.
 # _Please do not add a trailing slash._
 DAV_SOURCE="/"
@@ -138,16 +138,16 @@ read_configuration_value 'LOCAL_MOUNTPOINT' true
 
 # The backup archives as well as a directory called mirror will be stored
 # in `LOCAL_BACKUP_DESTINATION`. This is the effective backup destination.
-# This directory should ONLY be used for this script and not contain any 
+# This directory should ONLY be used for this script and not contain any
 # other data. This could potentially break the script.
 # _Please do not add a trailing slash._
 LOCAL_BACKUP_DESTINATION=""
 read_configuration_value 'LOCAL_BACKUP_DESTINATION' true
 
-# The `UNISON_OPTIONS` are passed directly to unison. `` is the highly recommended
+# The `UNISON_OPTIONS` are passed directly to unison. `-batch` is the highly recommended
 # default. If this is modified wrongly, the script might not work properly anymore - so be careful!
 # Checkout the unison documentation for further details.
-UNISON_OPTIONS="-auto"
+UNISON_OPTIONS="-batch"
 read_configuration_value 'UNISON_OPTIONS' true
 
 # If the `MIRROR_ONLY` value is set to true, the webdav share is only mirrored to the
@@ -209,15 +209,15 @@ fi
 echo "Mounting webdav share...."
 sudo mount -t davfs $DAV_URL$DAV_SOURCE/ $LOCAL_MOUNTPOINT<<<"$DAV_USER
 $DAV_PASSWORD" >>$STDOUT_LOG
-#" 
+#"
 
 # After succesful mounting, the unison syncronization can begin.
 echo "Mirroring webdav share...(this can take a veeeery long time...)"
-unison $UNISON_OPTIONS "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY">>"$STDOUT_LOG"
+unison $UNISON_OPTIONS "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY" 2>> "$STDOUT_LOG"
 
 # After the sync is done, the webdav share can be unmounted.
 echo "Unmount the webdav share..."
-sudo umount "$LOCAL_MOUNTPOINT">>"$STDOUT_LOG"
+sudo umount "$LOCAL_MOUNTPOINT" >> "$STDOUT_LOG"
 
 if [ "$MIRROR_ONLY" == "true" ]; then
 	echo "Skipping archive creation (mirror-only mode is on)"
@@ -227,7 +227,7 @@ else
 	echo "Creating backup archive....(this can take quite a bit if a lot of data has to be compressed"
 	cd "$MIRROR_DIRECTORY"
 	tar cfz "../$TODAY_FOLDER.tar.gz" * >>"$STDOUT_LOG"
-	echo "Backup done! Archive created at $TODAY_FOLDER.tar.gz"	
+	echo "Backup done! Archive created at $TODAY_FOLDER.tar.gz"
 fi
 
 # A confirmation email is sent to notify the responsible person.
@@ -239,4 +239,3 @@ if [ "$RECIPIENT" != "" ];then
 else
   echo "Done! Checkout the log at $STDOUT_LOG"
 fi
-
