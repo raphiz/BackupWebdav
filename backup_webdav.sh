@@ -20,7 +20,7 @@
 # # Requirements
 # Please enusre that the following software is installed on the client:
 #
-# * unison
+# * rsync
 # * davfs2
 #
 # ## WARNING
@@ -107,7 +107,7 @@ read_configuration_value 'DAV_URL' true
 # The `DAV_SOURCE` contains a relative path on the webdav share
 # pointing to the directory to backup. If the whole share shall
 # be backed up, leave this empty. If files/directories must be excluded,
-# use the `~/.unison/default.prf` file.
+# use RSYNC_OPTIONS.
 # _Please do not add a trailing slash._
 DAV_SOURCE="/"
 read_configuration_value 'DAV_SOURCE' true
@@ -144,11 +144,11 @@ read_configuration_value 'LOCAL_MOUNTPOINT' true
 LOCAL_BACKUP_DESTINATION=""
 read_configuration_value 'LOCAL_BACKUP_DESTINATION' true
 
-# The `UNISON_OPTIONS` are passed directly to unison. `-batch` is the highly recommended
+# The `RSYNC_OPTIONS` are passed directly to rsync. `-batch` is the highly recommended
 # default. If this is modified wrongly, the script might not work properly anymore - so be careful!
-# Checkout the unison documentation for further details.
-UNISON_OPTIONS="-batch"
-read_configuration_value 'UNISON_OPTIONS' true
+# Checkout the rsync documentation for further details.
+RSYNC_OPTIONS="-avzh --exclude='Thumbs.db' --delete --dry-run"
+read_configuration_value 'RSYNC_OPTIONS' true
 
 # If the `MIRROR_ONLY` value is set to true, the webdav share is only mirrored to the
 # mirror directory. The mirror directory will not be archived in this case!
@@ -211,9 +211,9 @@ sudo mount -t davfs $DAV_URL$DAV_SOURCE/ $LOCAL_MOUNTPOINT<<<"$DAV_USER
 $DAV_PASSWORD" >>$STDOUT_LOG
 #"
 
-# After succesful mounting, the unison syncronization can begin.
+# After succesful mounting, the begin with the rsync syncronization.
 echo "Mirroring webdav share...(this can take a veeeery long time...)"
-unison $UNISON_OPTIONS "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY" 2>> "$STDOUT_LOG"
+rsync $RSYNC_OPTIONS "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY" >> "$STDOUT_LOG"
 
 # After the sync is done, the webdav share can be unmounted.
 echo "Unmount the webdav share..."
