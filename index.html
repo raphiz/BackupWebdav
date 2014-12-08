@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#x61;&#x69;l&#116;&#111;:d&#101;&#x76;&#x65;&#x6C;&#111;&#112;&#109;&#101;n&#116;&#64;&#114;&#x61;&#x70;&#x68;&#x61;&#x65;&#x6C;&#x2E;&#x6C;&#105;">d&#101;&#x76;&#x65;&#x6C;&#111;&#112;&#109;&#101;n&#116;&#64;&#114;&#x61;&#x70;&#x68;&#x61;&#x65;&#x6C;&#x2E;&#x6C;&#105;</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;&#97;&#x69;&#108;&#116;&#111;:d&#101;v&#101;&#x6C;&#x6F;&#112;&#x6D;&#101;&#110;&#116;&#64;&#x72;&#x61;p&#x68;&#x61;&#101;&#108;&#46;&#108;&#x69;">d&#101;v&#101;&#x6C;&#x6F;&#112;&#x6D;&#101;&#110;&#116;&#64;&#x72;&#x61;p&#x68;&#x61;&#101;&#108;&#46;&#108;&#x69;</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -33,7 +33,7 @@
 <p>Please enusre that the following software is installed on the client:</p>
 
 <ul>
-<li>unison</li>
+<li>rsync</li>
 <li>davfs2</li>
 </ul>
 
@@ -153,8 +153,8 @@ read_configuration_value <span class="s1">&#39;DAV_URL&#39;</span> <span class="
 <p>The <code>DAV_SOURCE</code> contains a relative path on the webdav share
 pointing to the directory to backup. If the whole share shall
 be backed up, leave this empty. If files/directories must be excluded,
-use the <code>~/.unison/default.prf</code> file.
-<em>Please do not add a trailing slash.</em></p>
+use RSYNC<em>OPTIONS.
+_Please do not add a trailing slash.</em></p>
 
 <div class="highlight"><pre>
 <span class="nv">DAV_SOURCE</span><span class="o">=</span><span class="s2">&quot;/&quot;</span>
@@ -218,13 +218,13 @@ read_configuration_value <span class="s1">&#39;LOCAL_BACKUP_DESTINATION&#39;</sp
 
 </pre></div>
 
-<p>The <code>UNISON_OPTIONS</code> are passed directly to unison. <code>-batch</code> is the highly recommended
+<p>The <code>RSYNC_OPTIONS</code> are passed directly to rsync. <code>-batch</code> is the highly recommended
 default. If this is modified wrongly, the script might not work properly anymore - so be careful!
-Checkout the unison documentation for further details.</p>
+Checkout the rsync documentation for further details.</p>
 
 <div class="highlight"><pre>
-<span class="nv">UNISON_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-batch&quot;</span>
-read_configuration_value <span class="s1">&#39;UNISON_OPTIONS&#39;</span> <span class="nb">true</span>
+<span class="nv">RSYNC_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-avzh --exclude=&#39;Thumbs.db&#39; --delete --dry-run&quot;</span>
+read_configuration_value <span class="s1">&#39;RSYNC_OPTIONS&#39;</span> <span class="nb">true</span>
 
 </pre></div>
 
@@ -330,11 +330,11 @@ sudo mount -t davfs <span class="nv">$DAV_URL$DAV_SOURCE</span>/ <span class="nv
 
 </pre></div>
 
-<p>After succesful mounting, the unison syncronization can begin.</p>
+<p>After succesful mounting, the begin with the rsync syncronization.</p>
 
 <div class="highlight"><pre>
 <span class="nb">echo</span> <span class="s2">&quot;Mirroring webdav share...(this can take a veeeery long time...)&quot;</span>
-unison <span class="nv">$UNISON_OPTIONS</span> <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">/&quot;</span> <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span> 2&gt;&gt; <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
+rsync <span class="nv">$RSYNC_OPTIONS</span> <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">/&quot;</span> <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span> &gt;&gt; <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
 
 </pre></div>
 
