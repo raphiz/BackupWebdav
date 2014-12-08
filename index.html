@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;&#97;&#x69;&#108;&#116;&#111;:d&#101;v&#101;&#x6C;&#x6F;&#112;&#x6D;&#101;&#110;&#116;&#64;&#x72;&#x61;p&#x68;&#x61;&#101;&#108;&#46;&#108;&#x69;">d&#101;v&#101;&#x6C;&#x6F;&#112;&#x6D;&#101;&#110;&#116;&#64;&#x72;&#x61;p&#x68;&#x61;&#101;&#108;&#46;&#108;&#x69;</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;&#x61;&#x69;&#108;&#x74;&#111;:&#100;&#101;&#118;&#x65;&#108;&#111;&#112;&#x6D;&#x65;&#x6E;&#x74;&#64;&#114;ap&#104;&#97;&#x65;&#108;&#x2E;&#108;&#105;">&#100;&#101;&#118;&#x65;&#108;&#111;&#112;&#x6D;&#x65;&#x6E;&#x74;&#64;&#114;ap&#104;&#97;&#x65;&#108;&#x2E;&#108;&#105;</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -218,12 +218,12 @@ read_configuration_value <span class="s1">&#39;LOCAL_BACKUP_DESTINATION&#39;</sp
 
 </pre></div>
 
-<p>The <code>RSYNC_OPTIONS</code> are passed directly to rsync. <code>-batch</code> is the highly recommended
+<p>The <code>RSYNC_OPTIONS</code> are passed directly to rsync. <code>-avzh --exclude 'Thumbs.db' --deletew</code> is the highly recommended
 default. If this is modified wrongly, the script might not work properly anymore - so be careful!
 Checkout the rsync documentation for further details.</p>
 
 <div class="highlight"><pre>
-<span class="nv">RSYNC_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-avzh --exclude=&#39;Thumbs.db&#39; --delete --dry-run&quot;</span>
+<span class="nv">RSYNC_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-avzh --exclude &#39;Thumbs.db&#39; --delete&quot;</span>
 read_configuration_value <span class="s1">&#39;RSYNC_OPTIONS&#39;</span> <span class="nb">true</span>
 
 </pre></div>
