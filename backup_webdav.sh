@@ -144,10 +144,10 @@ read_configuration_value 'LOCAL_MOUNTPOINT' true
 LOCAL_BACKUP_DESTINATION=""
 read_configuration_value 'LOCAL_BACKUP_DESTINATION' true
 
-# The `RSYNC_OPTIONS` are passed directly to rsync. `-avzh --exclude 'Thumbs.db' --exclude 'lost+found/' --delete` is the highly recommended
+# The `RSYNC_OPTIONS` are passed directly to rsync. `-avzh --exclude='/lost+found/' --delete` is the highly recommended
 # default. If this is modified wrongly, the script might not work properly anymore - so be careful!
 # Checkout the rsync documentation for further details.
-RSYNC_OPTIONS="-avzh --exclude 'Thumbs.db' --exclude 'lost+found/' --delete"
+RSYNC_OPTIONS="-avzh --exclude --exclude='/lost+found/' --delete"
 read_configuration_value 'RSYNC_OPTIONS' true
 
 # If the `MIRROR_ONLY` value is set to true, the webdav share is only mirrored to the
