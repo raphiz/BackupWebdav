@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;&#x61;i&#108;&#116;&#x6F;:&#x64;&#x65;&#x76;&#101;&#108;&#111;&#x70;&#109;&#101;&#x6E;&#116;&#64;&#x72;&#97;&#112;&#x68;&#97;&#x65;&#108;&#x2E;&#108;&#x69;">&#x64;&#x65;&#x76;&#101;&#108;&#111;&#x70;&#109;&#101;&#x6E;&#116;&#64;&#x72;&#97;&#112;&#x68;&#97;&#x65;&#108;&#x2E;&#108;&#x69;</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#97;&#x69;&#x6C;&#x74;&#111;:&#x64;&#x65;&#118;&#101;&#x6C;&#111;&#x70;&#109;&#101;&#x6E;&#x74;&#64;&#x72;&#97;&#x70;&#x68;&#x61;&#x65;&#x6C;&#46;&#108;i">&#x64;&#x65;&#118;&#101;&#x6C;&#111;&#x70;&#109;&#101;&#x6E;&#x74;&#64;&#x72;&#97;&#x70;&#x68;&#x61;&#x65;&#x6C;&#46;&#108;i</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -218,12 +218,13 @@ read_configuration_value <span class="s1">&#39;LOCAL_BACKUP_DESTINATION&#39;</sp
 
 </pre></div>
 
-<p>The <code>RSYNC_OPTIONS</code> are passed directly to rsync. <code>-avzh --exclude='/lost+found/' --delete</code> is the highly recommended
+<p>The <code>RSYNC_OPTIONS</code> are passed directly to rsync. <code>-avzh --exclude 'Thumbs.db' --exclude '/lost+found/' --delete</code>
+is the highly recommended
 default. If this is modified wrongly, the script might not work properly anymore - so be careful!
 Checkout the rsync documentation for further details.</p>
 
 <div class="highlight"><pre>
-<span class="nv">RSYNC_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-avzh --exclude --exclude=&#39;/lost+found/&#39; --delete&quot;</span>
+<span class="nv">RSYNC_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-avzh --exclude &#39;Thumbs.db&#39; --exclude &#39;/lost+found/&#39; --delete&quot;</span>
 read_configuration_value <span class="s1">&#39;RSYNC_OPTIONS&#39;</span> <span class="nb">true</span>
 
 </pre></div>
