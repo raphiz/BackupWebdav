@@ -209,7 +209,7 @@ fi
 # Next, the webdav share is mounted.
 echo "Mounting webdav share...."
 sudo mount -t davfs $DAV_URL$DAV_SOURCE/ $LOCAL_MOUNTPOINT<<<"$DAV_USER
-$DAV_PASSWORD" >>"$STDOUT_LOG"
+$DAV_PASSWORD" | sudo tee -a "$STDOUT_LOG" > /dev/null
 #"
 
 # After succesful mounting, the begin with the rsync syncronization.
@@ -218,7 +218,7 @@ rsync $RSYNC_OPTIONS "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY" >> "$STDOUT_LOG"
 
 # After the sync is done, the webdav share can be unmounted.
 echo "Unmount the webdav share..."
-sudo umount "$LOCAL_MOUNTPOINT" >> "$STDOUT_LOG"
+sudo umount "$LOCAL_MOUNTPOINT" | sudo tee -a "$STDOUT_LOG" > /dev/null
 
 if [ "$MIRROR_ONLY" == "true" ]; then
 	echo "Skipping archive creation (mirror-only mode is on)"
