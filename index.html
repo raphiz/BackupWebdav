@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#x61;&#105;&#x6C;&#x74;&#111;:&#100;&#x65;&#x76;&#x65;&#x6C;&#111;&#112;&#x6D;&#x65;n&#116;&#64;&#114;a&#112;&#x68;&#x61;&#x65;&#108;&#46;&#108;&#105;">&#100;&#x65;&#x76;&#x65;&#x6C;&#111;&#112;&#x6D;&#x65;n&#116;&#64;&#114;a&#112;&#x68;&#x61;&#x65;&#108;&#46;&#108;&#105;</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;a&#105;&#x6C;&#x74;&#111;:&#100;&#101;&#118;&#101;&#108;&#x6F;&#x70;&#109;e&#110;&#116;&#64;&#114;&#97;&#112;h&#97;&#x65;&#108;&#46;&#x6C;&#105;">&#100;&#101;&#118;&#101;&#108;&#x6F;&#x70;&#109;e&#110;&#116;&#64;&#114;&#97;&#112;h&#97;&#x65;&#108;&#46;&#x6C;&#105;</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -326,7 +326,7 @@ if it does not yet exist.</p>
 <div class="highlight"><pre>
 <span class="nb">echo</span> <span class="s2">&quot;Mounting webdav share....&quot;</span>
 sudo mount -t davfs <span class="nv">$DAV_URL$DAV_SOURCE</span>/ <span class="nv">$LOCAL_MOUNTPOINT</span><span class="o">&lt;&lt;&lt;</span><span class="s2">&quot;</span><span class="nv">$DAV_USER</span><span class="s2"></span>
-<span class="nv">$DAV_PASSWORD</span><span class="s2">&quot;</span> &gt;&gt;<span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
+<span class="nv">$DAV_PASSWORD</span><span class="s2">&quot;</span> <span class="p">|</span> sudo tee -a <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> &gt; /dev/null
 <span class="c">#&quot;</span>
 
 </pre></div>
@@ -343,7 +343,7 @@ rsync <span class="nv">$RSYNC_OPTIONS</span> <span class="s2">&quot;</span><span
 
 <div class="highlight"><pre>
 <span class="nb">echo</span> <span class="s2">&quot;Unmount the webdav share...&quot;</span>
-sudo umount <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span> &gt;&gt; <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
+sudo umount <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span> <span class="p">|</span> sudo tee -a <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> &gt; /dev/null
 
 <span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$MIRROR_ONLY</span><span class="s2">&quot;</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
 	<span class="nb">echo</span> <span class="s2">&quot;Skipping archive creation (mirror-only mode is on)&quot;</span>
