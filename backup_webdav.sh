@@ -144,7 +144,7 @@ read_configuration_value 'LOCAL_MOUNTPOINT' true
 LOCAL_BACKUP_DESTINATION=""
 read_configuration_value 'LOCAL_BACKUP_DESTINATION' true
 
-# The `RSYNC_OPTIONS` are passed directly to rsync. `-avzh --exclude 'Thumbs.db' --exclude '/lost+found/' --delete`
+# The `RSYNC_OPTIONS` are passed directly to rsync. `-avzh --exclude=Thumbs.db --exclude=lost+found --delete`
 # is the highly recommended
 # default. If this is modified wrongly, the script might not work properly anymore - so be careful!
 # Checkout the rsync documentation for further details.
