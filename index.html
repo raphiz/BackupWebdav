@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#97;&#x69;&#x6C;&#x74;&#111;:&#x64;&#x65;&#118;&#101;&#x6C;&#111;&#x70;&#109;&#101;&#x6E;&#x74;&#64;&#x72;&#97;&#x70;&#x68;&#x61;&#x65;&#x6C;&#46;&#108;i">&#x64;&#x65;&#118;&#101;&#x6C;&#111;&#x70;&#109;&#101;&#x6E;&#x74;&#64;&#x72;&#97;&#x70;&#x68;&#x61;&#x65;&#x6C;&#46;&#108;i</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;&#97;&#x69;&#108;&#116;&#x6F;:&#x64;&#101;&#x76;&#101;&#108;&#x6F;&#112;&#109;&#101;&#x6E;&#116;&#64;&#114;&#x61;&#x70;&#104;&#97;&#x65;&#108;&#46;&#108;i">&#x64;&#101;&#x76;&#101;&#108;&#x6F;&#112;&#109;&#101;&#x6E;&#116;&#64;&#114;&#x61;&#x70;&#104;&#97;&#x65;&#108;&#46;&#108;i</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -109,7 +109,7 @@ assign it</p>
 
 <div class="highlight"><pre>
 	<span class="k">if</span> <span class="o">[</span> -f <span class="s2">&quot;</span><span class="nv">$configfile</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-		<span class="nv">variable</span><span class="o">=</span><span class="sb">`</span>sed -n <span class="s2">&quot;s/^</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span> <span class="nv">$configfile</span><span class="sb">`</span>
+		<span class="nv">variable</span><span class="o">=</span><span class="k">$(</span>sed -n <span class="s2">&quot;s/^</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span> <span class="nv">$configfile</span><span class="k">)</span>
 		<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$variable</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
 			<span class="nb">eval</span> <span class="s2">&quot;</span><span class="nv">$configuration_name</span><span class="s2">&quot;</span><span class="o">=</span><span class="s1">&#39;$variable&#39;</span> <span class="c"># Aahhhrg! Eval is Evil!</span>
 		<span class="k">fi</span>
@@ -123,7 +123,7 @@ the contents of the variable with the name.</p>
 <div class="highlight"><pre>
 	<span class="nv">required</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="nv">$2</span> <span class="p">|</span> awk <span class="s1">&#39;{print tolower($0)}&#39;</span><span class="k">)</span>
 
-	<span class="nv">value</span><span class="o">=</span><span class="sb">`</span><span class="o">(</span><span class="nb">set</span> -o posix <span class="p">;</span> <span class="nb">set</span> <span class="o">)</span><span class="p">|</span> sed -n <span class="s2">&quot;s/^</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span><span class="sb">`</span>
+	<span class="nv">value</span><span class="o">=</span><span class="k">$((</span><span class="nb">set</span> <span class="o">-</span>o posix <span class="p">;</span> <span class="nb">set</span> <span class="o">)|</span> sed <span class="o">-</span>n <span class="s2">&quot;s/^</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span><span class="o">)</span>
 
 
 </pre></div>
@@ -133,7 +133,7 @@ the contents of the variable with the name.</p>
 <div class="highlight"><pre>
 	<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$required</span><span class="s2">&quot;</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span>  <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$value</span><span class="s2">&quot;</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
 		<span class="nb">echo</span> <span class="s2">&quot;No value set for configuration </span><span class="nv">$configuration_name</span><span class="s2">. Please provide one in a config file or inside the script&quot;</span>
-		<span class="nb">exit </span>1
+		<span class="nb">exit </span><span class="m">1</span>
 	<span class="k">fi</span>
 <span class="o">}</span>
 
@@ -282,7 +282,7 @@ by minimizing the network usage.</p>
 <p>The existance of the mirror directory is evaluated.</p>
 
 <div class="highlight"><pre>
-<span class="k">if</span> <span class="o">[</span> -d <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+<span class="k">if</span> <span class="o">[</span> <span class="o">-</span>d <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
 	<span class="nb">echo</span> <span class="s2">&quot;Using existing mirror directory....&quot;</span>
 <span class="k">else</span>
 </pre></div>
@@ -291,7 +291,7 @@ by minimizing the network usage.</p>
 
 <div class="highlight"><pre>
 	<span class="nb">echo</span> <span class="s2">&quot;No mirror directory found...it will be created...&quot;</span>
-	mkdir -p <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span>
+	mkdir <span class="o">-</span>p <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span>
 
 </pre></div>
 
@@ -300,10 +300,10 @@ the empty mirror directory. Therefore, only the difference between
 the last backup and now has to be exchanged via the network.</p>
 
 <div class="highlight"><pre>
-	<span class="k">if</span> <span class="o">[</span> -e <span class="s2">&quot;</span><span class="nv">$PREVIOUS_FILE</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+	<span class="k">if</span> <span class="o">[</span> <span class="o">-</span>e <span class="s2">&quot;</span><span class="nv">$PREVIOUS_FILE</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
 		<span class="nb">echo</span> <span class="s2">&quot;Last backup archive was </span><span class="nv">$PREVIOUS_FILE</span><span class="s2">&quot;</span>
 		<span class="nb">echo</span> <span class="s2">&quot;Using last backed up archive as base to reduce transfer time&quot;</span>
-		tar -xf <span class="s2">&quot;</span><span class="nv">$PREVIOUS_FILE</span><span class="s2">&quot;</span> -C <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span>&gt;&gt;<span class="nv">$STDOUT_LOG</span>
+		tar <span class="o">-</span>xf <span class="s2">&quot;</span><span class="nv">$PREVIOUS_FILE</span><span class="s2">&quot;</span> <span class="o">-</span>C <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span>&gt;&gt;<span class="nv">$STDOUT_LOG</span>
 	<span class="k">else</span>
 		<span class="nb">echo</span> <span class="s2">&quot;no previous backup files found...&quot;</span>
 	<span class="k">fi</span>
@@ -315,8 +315,8 @@ the last backup and now has to be exchanged via the network.</p>
 if it does not yet exist.</p>
 
 <div class="highlight"><pre>
-<span class="k">if</span> <span class="o">[</span> ! -d <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-	mkdir -p <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span>
+<span class="k">if</span> <span class="o">[</span> ! <span class="o">-</span>d <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+	mkdir <span class="o">-</span>p <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span>
 <span class="k">fi</span>
 
 </pre></div>
@@ -325,7 +325,7 @@ if it does not yet exist.</p>
 
 <div class="highlight"><pre>
 <span class="nb">echo</span> <span class="s2">&quot;Mounting webdav share....&quot;</span>
-sudo mount -t davfs <span class="nv">$DAV_URL$DAV_SOURCE</span>/ <span class="nv">$LOCAL_MOUNTPOINT</span><span class="o">&lt;&lt;&lt;</span><span class="s2">&quot;</span><span class="nv">$DAV_USER</span><span class="s2"></span>
+sudo mount <span class="o">-</span>t davfs <span class="nv">$DAV_URL$DAV_SOURCE</span><span class="o">/</span> <span class="nv">$LOCAL_MOUNTPOINT</span><span class="o">&lt;&lt;&lt;</span><span class="s2">&quot;</span><span class="nv">$DAV_USER</span><span class="s2"></span>
 <span class="nv">$DAV_PASSWORD</span><span class="s2">&quot;</span> &gt;&gt;<span class="nv">$STDOUT_LOG</span>
 <span class="c">#&quot;</span>
 
@@ -356,7 +356,7 @@ sudo umount <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</sp
 <div class="highlight"><pre>
 	<span class="nb">echo</span> <span class="s2">&quot;Creating backup archive....(this can take quite a bit if a lot of data has to be compressed&quot;</span>
 	<span class="nb">cd</span> <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span>
-	tar cfz <span class="s2">&quot;../</span><span class="nv">$TODAY_FOLDER</span><span class="s2">.tar.gz&quot;</span> * &gt;&gt;<span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
+	tar cfz <span class="s2">&quot;../</span><span class="nv">$TODAY_FOLDER</span><span class="s2">.tar.gz&quot;</span> <span class="o">*</span> &gt;&gt;<span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
 	<span class="nb">echo</span> <span class="s2">&quot;Backup done! Archive created at </span><span class="nv">$TODAY_FOLDER</span><span class="s2">.tar.gz&quot;</span>
 <span class="k">fi</span>
 
@@ -368,7 +368,7 @@ The log file is attached.</p>
 <div class="highlight"><pre>
 <span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$RECIPIENT</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
   <span class="nb">echo</span> <span class="s2">&quot;The Backup with timestam </span><span class="nv">$TODAY_FOLDER</span><span class="s2"> is done!\</span>
-<span class="s2">  Checkout the attached log file for details.&quot;</span>  <span class="p">|</span> mail -s <span class="s2">&quot;Backup complete&quot;</span> -a <span class="nv">$STDOUT_LOG</span> -r <span class="nv">$SENDER</span> <span class="nv">$RECIPIENT</span>
+<span class="s2">  Checkout the attached log file for details.&quot;</span>  <span class="o">|</span> mail <span class="o">-</span>s <span class="s2">&quot;Backup complete&quot;</span> <span class="o">-</span>a <span class="nv">$STDOUT_LOG</span> <span class="o">-</span>r <span class="nv">$SENDER</span> <span class="nv">$RECIPIENT</span>
   rm <span class="nv">$STDOUT_LOG</span>
 <span class="k">else</span>
   <span class="nb">echo</span> <span class="s2">&quot;Done! Checkout the log at </span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
