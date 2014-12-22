@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#x61;&#105;&#108;&#116;&#x6F;:&#x64;&#101;&#x76;&#x65;&#108;&#x6F;&#112;&#109;&#101;n&#116;&#64;&#x72;&#97;&#x70;h&#97;&#101;&#x6C;.&#108;&#105;">&#x64;&#101;&#x76;&#x65;&#108;&#x6F;&#112;&#109;&#101;n&#116;&#64;&#x72;&#97;&#x70;h&#97;&#101;&#x6C;.&#108;&#105;</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#x61;&#x69;&#x6C;&#116;&#x6F;:&#x64;&#101;&#118;&#x65;&#x6C;&#111;&#112;&#x6D;&#x65;&#x6E;&#x74;&#64;&#x72;&#97;&#x70;&#x68;&#x61;&#x65;&#x6C;&#46;&#108;&#x69;">&#x64;&#101;&#118;&#x65;&#x6C;&#111;&#112;&#x6D;&#x65;&#x6E;&#x74;&#64;&#x72;&#97;&#x70;&#x68;&#x61;&#x65;&#x6C;&#46;&#108;&#x69;</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -221,11 +221,13 @@ read_configuration_value <span class="s1">&#39;LOCAL_BACKUP_DESTINATION&#39;</sp
 <p>The <code>RSYNC_OPTIONS</code> are passed directly to rsync. <code>-avzh --exclude 'Thumbs.db' --exclude '/lost+found/' --delete</code>
 is the highly recommended
 default. If this is modified wrongly, the script might not work properly anymore - so be careful!
-Checkout the rsync documentation for further details.</p>
+Checkout the rsync documentation for further details.
+shellcheck disable=SC2089</p>
 
 <div class="highlight"><pre>
 <span class="nv">RSYNC_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-avzh --exclude &#39;Thumbs.db&#39; --exclude &#39;/lost+found/&#39; --delete&quot;</span>
 read_configuration_value <span class="s1">&#39;RSYNC_OPTIONS&#39;</span> <span class="nb">true</span>
+<span class="nv">IFS</span><span class="o">=</span><span class="s1">&#39; &#39;</span> <span class="nb">read</span> -a RSYNC_OPTIONS <span class="o">&lt;&lt;&lt;</span> <span class="s2">&quot;</span><span class="nv">$RSYNC_OPTIONS</span><span class="s2">&quot;</span> <span class="c"># Convert the string int an array (See: SC2089)</span>
 
 </pre></div>
 
@@ -335,7 +337,7 @@ sudo mount -t davfs <span class="nv">$DAV_URL$DAV_SOURCE</span>/ <span class="nv
 
 <div class="highlight"><pre>
 <span class="nb">echo</span> <span class="s2">&quot;Mirroring webdav share...(this can take a veeeery long time...)&quot;</span>
-rsync <span class="nv">$RSYNC_OPTIONS</span> <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">/&quot;</span> <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span> &gt;&gt; <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
+rsync <span class="s2">&quot;</span><span class="si">${</span><span class="nv">RSYNC_OPTIONS</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">/&quot;</span> <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span> &gt;&gt; <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
 
 </pre></div>
 
