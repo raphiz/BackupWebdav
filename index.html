@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;a&#105;&#x6C;&#x74;&#111;:&#100;&#101;&#118;&#101;&#108;&#x6F;&#x70;&#109;e&#110;&#116;&#64;&#114;&#97;&#112;h&#97;&#x65;&#108;&#46;&#x6C;&#105;">&#100;&#101;&#118;&#101;&#108;&#x6F;&#x70;&#109;e&#110;&#116;&#64;&#114;&#97;&#112;h&#97;&#x65;&#108;&#46;&#x6C;&#105;</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#x61;&#105;&#108;&#116;&#x6F;:&#x64;&#101;&#x76;&#x65;&#108;&#x6F;&#112;&#109;&#101;n&#116;&#64;&#x72;&#97;&#x70;h&#97;&#101;&#x6C;.&#108;&#105;">&#x64;&#101;&#x76;&#x65;&#108;&#x6F;&#112;&#109;&#101;n&#116;&#64;&#x72;&#97;&#x70;h&#97;&#101;&#x6C;.&#108;&#105;</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -356,7 +356,7 @@ sudo umount <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</sp
 <div class="highlight"><pre>
 	<span class="nb">echo</span> <span class="s2">&quot;Creating backup archive....(this can take quite a bit if a lot of data has to be compressed&quot;</span>
 	<span class="nb">cd</span> <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span>
-	tar cfz <span class="s2">&quot;../</span><span class="nv">$TODAY_FOLDER</span><span class="s2">.tar.gz&quot;</span> * &gt;&gt;<span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
+	tar cfz <span class="s2">&quot;../</span><span class="nv">$TODAY_FOLDER</span><span class="s2">.tar.gz&quot;</span> ./* &gt;&gt;<span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
 	<span class="nb">echo</span> <span class="s2">&quot;Backup done! Archive created at </span><span class="nv">$TODAY_FOLDER</span><span class="s2">.tar.gz&quot;</span>
 <span class="k">fi</span>
 
