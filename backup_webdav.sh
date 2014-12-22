@@ -79,7 +79,7 @@ function read_configuration_value {
 	if [ -f "$configfile" ]; then
 		variable=$(sed -n "s/^$configuration_name= *//p" "$configfile")
 		if [ "$variable" != "" ];then
-			eval "$configuration_name"='$variable' # Aahhhrg! Eval is Evil!
+			eval "$configuration_name"="$variable" # Aahhhrg! Eval is Evil!
 		fi
 	fi
 
