@@ -227,7 +227,7 @@ else
 	# The mirror directory is now archived and compressed.
 	echo "Creating backup archive....(this can take quite a bit if a lot of data has to be compressed"
 	cd "$MIRROR_DIRECTORY"
-	tar cfz "../$TODAY_FOLDER.tar.gz" * >>"$STDOUT_LOG"
+	tar cfz "../$TODAY_FOLDER.tar.gz" ./* >>"$STDOUT_LOG"
 	echo "Backup done! Archive created at $TODAY_FOLDER.tar.gz"
 fi
 
