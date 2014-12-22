@@ -144,12 +144,12 @@ read_configuration_value 'LOCAL_MOUNTPOINT' true
 LOCAL_BACKUP_DESTINATION=""
 read_configuration_value 'LOCAL_BACKUP_DESTINATION' true
 
-# The `RSYNC_OPTIONS` are passed directly to rsync. `-avzh --exclude=Thumbs.db --exclude=lost+found --delete`
+# The `RSYNC_OPTIONS` are passed directly to rsync. `-avzh --deleted`
 # is the highly recommended
 # default. If this is modified wrongly, the script might not work properly anymore - so be careful!
 # Checkout the rsync documentation for further details.
 # shellcheck disable=SC2089
-RSYNC_OPTIONS="-avzh --exclude=Thumbs.db --exclude=lost+found --delete"
+RSYNC_OPTIONS="-avzh --delete"
 read_configuration_value 'RSYNC_OPTIONS' true
 IFS=' ' read -a RSYNC_OPTIONS <<< "$RSYNC_OPTIONS" # Convert the string int an array (See: SC2089)
 
