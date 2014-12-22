@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#97;&#x69;&#x6C;&#x74;&#x6F;:&#100;&#x65;&#118;&#x65;&#x6C;&#x6F;&#112;&#x6D;&#101;n&#x74;&#64;&#x72;a&#x70;&#104;&#97;&#x65;&#x6C;&#46;l&#x69;">&#100;&#x65;&#118;&#x65;&#x6C;&#x6F;&#112;&#x6D;&#101;n&#x74;&#64;&#x72;a&#x70;&#104;&#97;&#x65;&#x6C;&#46;l&#x69;</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;&#97;&#x69;&#108;&#x74;&#x6F;:d&#x65;&#118;&#x65;l&#111;&#112;m&#x65;&#x6E;&#116;&#64;&#x72;&#97;&#x70;&#104;&#x61;&#x65;&#108;&#46;l&#105;">d&#x65;&#118;&#x65;l&#111;&#112;m&#x65;&#x6E;&#116;&#64;&#x72;&#97;&#x70;&#104;&#x61;&#x65;&#108;&#46;l&#105;</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -109,7 +109,7 @@ assign it</p>
 
 <div class="highlight"><pre>
 	<span class="k">if</span> <span class="o">[</span> -f <span class="s2">&quot;</span><span class="nv">$configfile</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-		<span class="nv">variable</span><span class="o">=</span><span class="k">$(</span>sed -n <span class="s2">&quot;s/^</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span> <span class="nv">$configfile</span><span class="k">)</span>
+		<span class="nv">variable</span><span class="o">=</span><span class="k">$(</span>sed -n <span class="s2">&quot;s/^</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span> <span class="s2">&quot;</span><span class="nv">$configfile</span><span class="s2">&quot;</span><span class="k">)</span>
 		<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$variable</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
 			<span class="nb">eval</span> <span class="s2">&quot;</span><span class="nv">$configuration_name</span><span class="s2">&quot;</span><span class="o">=</span><span class="s1">&#39;$variable&#39;</span> <span class="c"># Aahhhrg! Eval is Evil!</span>
 		<span class="k">fi</span>
@@ -121,7 +121,7 @@ assign it</p>
 the contents of the variable with the name.</p>
 
 <div class="highlight"><pre>
-	<span class="nv">required</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="nv">$2</span> <span class="p">|</span> awk <span class="s1">&#39;{print tolower($0)}&#39;</span><span class="k">)</span>
+	<span class="nv">required</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="s2">&quot;</span><span class="nv">$2</span><span class="s2">&quot;</span> <span class="p">|</span> awk <span class="s1">&#39;{print tolower($0)}&#39;</span><span class="k">)</span>
 
 	<span class="nv">value</span><span class="o">=</span><span class="k">$(</span><span class="nb">set</span> -o posix <span class="p">;</span> <span class="nb">set</span> <span class="p">|</span> sed -n <span class="s2">&quot;s/^</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span><span class="k">)</span>
 
@@ -303,7 +303,7 @@ the last backup and now has to be exchanged via the network.</p>
 	<span class="k">if</span> <span class="o">[</span> -e <span class="s2">&quot;</span><span class="nv">$PREVIOUS_FILE</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
 		<span class="nb">echo</span> <span class="s2">&quot;Last backup archive was </span><span class="nv">$PREVIOUS_FILE</span><span class="s2">&quot;</span>
 		<span class="nb">echo</span> <span class="s2">&quot;Using last backed up archive as base to reduce transfer time&quot;</span>
-		tar -xf <span class="s2">&quot;</span><span class="nv">$PREVIOUS_FILE</span><span class="s2">&quot;</span> -C <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span>&gt;&gt;<span class="nv">$STDOUT_LOG</span>
+		tar -xf <span class="s2">&quot;</span><span class="nv">$PREVIOUS_FILE</span><span class="s2">&quot;</span> -C <span class="s2">&quot;</span><span class="nv">$MIRROR_DIRECTORY</span><span class="s2">&quot;</span>&gt;&gt;<span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
 	<span class="k">else</span>
 		<span class="nb">echo</span> <span class="s2">&quot;no previous backup files found...&quot;</span>
 	<span class="k">fi</span>
@@ -326,7 +326,7 @@ if it does not yet exist.</p>
 <div class="highlight"><pre>
 <span class="nb">echo</span> <span class="s2">&quot;Mounting webdav share....&quot;</span>
 sudo mount -t davfs <span class="nv">$DAV_URL$DAV_SOURCE</span>/ <span class="nv">$LOCAL_MOUNTPOINT</span><span class="o">&lt;&lt;&lt;</span><span class="s2">&quot;</span><span class="nv">$DAV_USER</span><span class="s2"></span>
-<span class="nv">$DAV_PASSWORD</span><span class="s2">&quot;</span> &gt;&gt;<span class="nv">$STDOUT_LOG</span>
+<span class="nv">$DAV_PASSWORD</span><span class="s2">&quot;</span> &gt;&gt;<span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
 <span class="c">#&quot;</span>
 
 </pre></div>
@@ -368,8 +368,8 @@ The log file is attached.</p>
 <div class="highlight"><pre>
 <span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$RECIPIENT</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
   <span class="nb">echo</span> <span class="s2">&quot;The Backup with timestam </span><span class="nv">$TODAY_FOLDER</span><span class="s2"> is done!\</span>
-<span class="s2">  Checkout the attached log file for details.&quot;</span>  <span class="p">|</span> mail -s <span class="s2">&quot;Backup complete&quot;</span> -a <span class="nv">$STDOUT_LOG</span> -r <span class="nv">$SENDER</span> <span class="nv">$RECIPIENT</span>
-  rm <span class="nv">$STDOUT_LOG</span>
+<span class="s2">  Checkout the attached log file for details.&quot;</span>  <span class="p">|</span> mail -s <span class="s2">&quot;Backup complete&quot;</span> -a <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> -r <span class="s2">&quot;</span><span class="nv">$SENDER</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$RECIPIENT</span><span class="s2">&quot;</span>
+  rm <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
 <span class="k">else</span>
   <span class="nb">echo</span> <span class="s2">&quot;Done! Checkout the log at </span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
 <span class="k">fi</span>
