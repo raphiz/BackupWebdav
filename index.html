@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;&#97;&#x69;&#108;&#x74;&#x6F;:d&#x65;&#118;&#x65;l&#111;&#112;m&#x65;&#x6E;&#116;&#64;&#x72;&#97;&#x70;&#104;&#x61;&#x65;&#108;&#46;l&#105;">d&#x65;&#118;&#x65;l&#111;&#112;m&#x65;&#x6E;&#116;&#64;&#x72;&#97;&#x70;&#104;&#x61;&#x65;&#108;&#46;l&#105;</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#x61;&#105;&#x6C;&#x74;&#111;:&#100;&#x65;&#x76;&#x65;&#x6C;&#111;&#112;&#x6D;&#x65;n&#116;&#64;&#114;a&#112;&#x68;&#x61;&#x65;&#108;&#46;&#108;&#105;">&#100;&#x65;&#x76;&#x65;&#x6C;&#111;&#112;&#x6D;&#x65;n&#116;&#64;&#114;a&#112;&#x68;&#x61;&#x65;&#108;&#46;&#108;&#105;</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -111,7 +111,7 @@ assign it</p>
 	<span class="k">if</span> <span class="o">[</span> -f <span class="s2">&quot;</span><span class="nv">$configfile</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
 		<span class="nv">variable</span><span class="o">=</span><span class="k">$(</span>sed -n <span class="s2">&quot;s/^</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span> <span class="s2">&quot;</span><span class="nv">$configfile</span><span class="s2">&quot;</span><span class="k">)</span>
 		<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$variable</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
-			<span class="nb">eval</span> <span class="s2">&quot;</span><span class="nv">$configuration_name</span><span class="s2">&quot;</span><span class="o">=</span><span class="s1">&#39;$variable&#39;</span> <span class="c"># Aahhhrg! Eval is Evil!</span>
+			<span class="nb">eval</span> <span class="s2">&quot;</span><span class="nv">$configuration_name</span><span class="s2">&quot;</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$variable</span><span class="s2">&quot;</span> <span class="c"># Aahhhrg! Eval is Evil!</span>
 		<span class="k">fi</span>
 	<span class="k">fi</span>
 
