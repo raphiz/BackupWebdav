@@ -77,7 +77,7 @@ function read_configuration_value {
 	# If a configuration file is provided, parse the given value and
 	# assign it
 	if [ -f "$configfile" ]; then
-		variable=$(sed -n "s/^$configuration_name= *//p" $configfile)
+		variable=$(sed -n "s/^$configuration_name= *//p" "$configfile")
 		if [ "$variable" != "" ];then
 			eval "$configuration_name"='$variable' # Aahhhrg! Eval is Evil!
 		fi
@@ -85,7 +85,7 @@ function read_configuration_value {
 
 	# Evaluate if the given configuration is required as well as
 	# the contents of the variable with the name.
-	required=$(echo $2 | awk '{print tolower($0)}')
+	required=$(echo "$2" | awk '{print tolower($0)}')
 
 	value=$(set -o posix ; set | sed -n "s/^$configuration_name= *//p")
 
@@ -194,7 +194,7 @@ else
 	if [ -e "$PREVIOUS_FILE" ]; then
 		echo "Last backup archive was $PREVIOUS_FILE"
 		echo "Using last backed up archive as base to reduce transfer time"
-		tar -xf "$PREVIOUS_FILE" -C "$MIRROR_DIRECTORY">>$STDOUT_LOG
+		tar -xf "$PREVIOUS_FILE" -C "$MIRROR_DIRECTORY">>"$STDOUT_LOG"
 	else
 		echo "no previous backup files found..."
 	fi
@@ -209,7 +209,7 @@ fi
 # Next, the webdav share is mounted.
 echo "Mounting webdav share...."
 sudo mount -t davfs $DAV_URL$DAV_SOURCE/ $LOCAL_MOUNTPOINT<<<"$DAV_USER
-$DAV_PASSWORD" >>$STDOUT_LOG
+$DAV_PASSWORD" >>"$STDOUT_LOG"
 #"
 
 # After succesful mounting, the begin with the rsync syncronization.
@@ -235,8 +235,8 @@ fi
 # The log file is attached.
 if [ "$RECIPIENT" != "" ];then
   echo "The Backup with timestam $TODAY_FOLDER is done!\
-  Checkout the attached log file for details."  | mail -s "Backup complete" -a $STDOUT_LOG -r $SENDER $RECIPIENT
-  rm $STDOUT_LOG
+  Checkout the attached log file for details."  | mail -s "Backup complete" -a "$STDOUT_LOG" -r "$SENDER" "$RECIPIENT"
+  rm "$STDOUT_LOG"
 else
   echo "Done! Checkout the log at $STDOUT_LOG"
 fi
