@@ -77,7 +77,7 @@ function read_configuration_value {
 	# If a configuration file is provided, parse the given value and
 	# assign it
 	if [ -f "$configfile" ]; then
-		variable=`sed -n "s/^$configuration_name= *//p" $configfile`
+		variable=$(sed -n "s/^$configuration_name= *//p" $configfile)
 		if [ "$variable" != "" ];then
 			eval "$configuration_name"='$variable' # Aahhhrg! Eval is Evil!
 		fi
@@ -87,7 +87,7 @@ function read_configuration_value {
 	# the contents of the variable with the name.
 	required=$(echo $2 | awk '{print tolower($0)}')
 
-	value=`(set -o posix ; set )| sed -n "s/^$configuration_name= *//p"`
+	value=$((set -o posix ; set )| sed -n "s/^$configuration_name= *//p")
 
 
 	# Stop execution if a required varaible is empty/not set
