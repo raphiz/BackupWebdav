@@ -7,6 +7,7 @@
 # Copyright (c) 2014, Raphael Zimmermann, All rights reserved.
 #
 # ## TODO
+# * Add prefix for rsync output
 # * Write the whole Duration into the mail!
 # * Run script as root - OR how can webdav be mounted else?
 # * Check if the mountpoint is empty
@@ -98,6 +99,16 @@ function read_configuration_value {
 }
 
 
+function rsync_print () {  
+    verbose="$1"
+    while read data; do
+        if [ "$verbose" != "false" ]; then
+            echo "rsync: $data"
+        fi
+    done
+        awk '{ print strftime("rsync:"), $0; fflush(); }'
+}
+
 # The variable `DAV_URL` contains the address of the webdav share to backup,
 # for example `https://example.com:80`.
 # _Please do not add a trailing slash._
@@ -159,6 +170,13 @@ MIRROR_ONLY="false"
 read_configuration_value 'MIRROR_ONLY' false
 MIRROR_ONLY=$(echo $MIRROR_ONLY | awk '{print tolower($0)}')
 
+
+# If the `VERBOSE` value is set to false, the output of the rsync command will not
+# show up in the standart output. If set to true, it will be printed with the 'rsync:' prefix
+VERBOSE="true"
+read_configuration_value 'VERBOSE' true
+VERBOSE=$(echo $VERBOSE | awk '{print tolower($0)}')
+
 # ## Main
 # The configuration section ENDS here...Do not modify the following contents unless
 # you know what you are doing! You have been warned...
@@ -216,11 +234,11 @@ $DAV_PASSWORD" | sudo tee -a "$STDOUT_LOG" > /dev/null
 
 # After succesful mounting, the begin with the rsync syncronization.
 echo "Mirroring webdav share...(this can take a veeeery long time...)"
-rsync "${RSYNC_OPTIONS[@]}" "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY" >> "$STDOUT_LOG"
+rsync "${RSYNC_OPTIONS[@]}" "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY" | tee -a "$STDOUT_LOG" | rsync_print $VERBOSE
 
 # After the sync is done, the webdav share can be unmounted.
 echo "Unmount the webdav share..."
-sudo umount "$LOCAL_MOUNTPOINT" | sudo tee -a "$STDOUT_LOG" > /dev/null
+sudo umount "$LOCAL_MOUNTPOINT" | tee -a "$STDOUT_LOG" > /dev/null
 
 if [ "$MIRROR_ONLY" == "true" ]; then
 	echo "Skipping archive creation (mirror-only mode is on)"
