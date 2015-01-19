@@ -7,13 +7,10 @@
 # Copyright (c) 2014, Raphael Zimmermann, All rights reserved.
 #
 # ## TODO
-# * Add prefix for rsync output
 # * Write the whole Duration into the mail!
 # * Run script as root - OR how can webdav be mounted else?
 # * Check if the mountpoint is empty
-# * Allow external configuration using environemnt variables or source
 # * Rename/Refactor the `Main Code` section. Fucntion?
-# * Log everything into the log file (see http://mostlyunixish.franzoni.eu/blog/2013/10/08/quick-log-for-bash-scripts/)
 # * Rename variables (TODAY) and stuff like this
 # * Fix Extend usage/prerequisites
 #
@@ -97,16 +94,28 @@ function read_configuration_value {
 		exit 1
 	fi
 }
+function log() {
+	level=$(echo "$1" | awk '{print toupper($0)}')
+	prefix="[$2] "
+	timestamp=$(date +'%d/%b/%Y:%X %z')
 
+	# If the prefix is emtpy, remove the brackets
+	if [ "$prefix" == "[] " ]; then
+		prefix=""
+	fi
 
-function rsync_print () {  
-    verbose="$1"
-    while read data; do
-        if [ "$verbose" != "false" ]; then
-            echo "rsync: $data"
-        fi
-    done
-        awk '{ print strftime("rsync:"), $0; fflush(); }'
+	# Read from the pipe
+	while read data; do
+		# Skip empty lines
+		if [ "$data" == "" ]; then
+			continue
+		fi
+
+		# Log if debug is enabled or log level is not debug
+		if [ \( "$VERBOSE" != "false" -a "$level" == "DEBUG" \) -o "$level" != "DEBUG" ]; then
+			printf "[%-5s] [%s] %s%s\n" "$level" "$timestamp" "$prefix" "$data"
+		fi
+	done
 }
 
 # The variable `DAV_URL` contains the address of the webdav share to backup,
@@ -172,7 +181,8 @@ MIRROR_ONLY=$(echo $MIRROR_ONLY | awk '{print tolower($0)}')
 
 
 # If the `VERBOSE` value is set to false, the output of the rsync command will not
-# show up in the standart output. If set to true, it will be printed with the 'rsync:' prefix
+# show up in the standart output. If set to true, it will logged as DEBUG log with the
+# rsync prefix.
 VERBOSE="true"
 read_configuration_value 'VERBOSE' true
 VERBOSE=$(echo $VERBOSE | awk '{print tolower($0)}')
@@ -198,25 +208,36 @@ MIRROR_DIRECTORY="$LOCAL_BACKUP_DESTINATION/mirror"
 # The name of the last backed up archive is evaluated.
 # If the mirror directory does not exist yet, this archive will be extracted there to improve performance
 # by minimizing the network usage.
-PREVIOUS_FILE=$(find "$LOCAL_BACKUP_DESTINATION" -maxdepth 1 -type f | sort | awk '/./{line=$0} END{print line}')
+
+PREVIOUS_FILE=""
+if [ -d "$LOCAL_BACKUP_DESTINATION" ]; then
+	PREVIOUS_FILE=$(find "$LOCAL_BACKUP_DESTINATION" -maxdepth 1 -type f | sort | awk '/./{line=$0} END{print line}')
+fi
 
 # The existance of the mirror directory is evaluated.
 if [ -d "$MIRROR_DIRECTORY" ]; then
-	echo "Using existing mirror directory...."
+	echo "Using existing mirror directory...." | log "INFO"
 else
 	# The mirror directory is created because does not exist yet.
-	echo "No mirror directory found...it will be created..."
-	mkdir -p "$MIRROR_DIRECTORY"
+	echo "No mirror directory found..." | log "INFO"
+
+	mkdir -p "$MIRROR_DIRECTORY" 2>/dev/null
+	if [ "$?" != "0" ]; then
+		echo "Can not create new mirror directory $MIRROR_DIRECTORY: Permission denied!" | log "ERROR"
+		exit 1
+	fi
+
+	echo "New mirror directory created..." | log "INFO"
 
 	# To reduce network usage, the `PREVIOUS_FILE` is extracted into
 	# the empty mirror directory. Therefore, only the difference between
 	# the last backup and now has to be exchanged via the network.
 	if [ -e "$PREVIOUS_FILE" ]; then
-		echo "Last backup archive was $PREVIOUS_FILE"
-		echo "Using last backed up archive as base to reduce transfer time"
+		echo "Last backup archive was $PREVIOUS_FILE" | log "INFO"
+		echo "Using last backed up archive as base to reduce transfer time" | log "INFO"
 		tar -xf "$PREVIOUS_FILE" -C "$MIRROR_DIRECTORY">>"$STDOUT_LOG"
 	else
-		echo "no previous backup files found..."
+		echo "no previous backup files found..." | log "INFO"
 	fi
 fi
 
@@ -227,36 +248,41 @@ if [ ! -d "$LOCAL_MOUNTPOINT" ]; then
 fi
 
 # Next, the webdav share is mounted.
-echo "Mounting webdav share...."
+echo "Mounting webdav share...." | log "INFO"
 sudo mount -t davfs $DAV_URL$DAV_SOURCE/ $LOCAL_MOUNTPOINT<<<"$DAV_USER
 $DAV_PASSWORD" | sudo tee -a "$STDOUT_LOG" > /dev/null
 #"
 
 # After succesful mounting, the begin with the rsync syncronization.
-echo "Mirroring webdav share...(this can take a veeeery long time...)"
-rsync "${RSYNC_OPTIONS[@]}" "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY" | tee -a "$STDOUT_LOG" | rsync_print $VERBOSE
+echo "Mirroring webdav share...(this can take a veeeery long time...)" | log "INFO"
+
+# Now This is carzy! The rsync command is called with the provided options and the
+# Provided mountpoint of the Webdav share as well ash the mirror directory as destination.
+# Then the output is piped into tee to append it to the log file (to be sent via E-Mail later)
+# Afterwards, the Info messages (STDOUT) are passed to the log function and so are the error messages (STDERR)
+{ { rsync "${RSYNC_OPTIONS[@]}" "$LOCAL_MOUNTPOINT/" "$MIRROR_DIRECTORY" | tee -a "$STDOUT_LOG" } 2>&3; } 2>&3 | log "INFO" "RSYNC"; } 3>&1 1>&2 | log "ERROR" "RSYNC" 2>&1;
 
 # After the sync is done, the webdav share can be unmounted.
-echo "Unmount the webdav share..."
+echo "Unmount the webdav share..." | log "INFO"
 sudo umount "$LOCAL_MOUNTPOINT" | tee -a "$STDOUT_LOG" > /dev/null
 
 if [ "$MIRROR_ONLY" == "true" ]; then
-	echo "Skipping archive creation (mirror-only mode is on)"
+	echo "Skipping archive creation (mirror-only mode is on)" | log "INFO"
 else
 
 	# The mirror directory is now archived and compressed.
-	echo "Creating backup archive....(this can take quite a bit if a lot of data has to be compressed"
+	echo "Creating backup archive....(this can take quite a bit if a lot of data has to be compressed" | log "INFO"
 	cd "$MIRROR_DIRECTORY"
 	tar cfz "../$TODAY_FOLDER.tar.gz" ./* >>"$STDOUT_LOG"
-	echo "Backup done! Archive created at $TODAY_FOLDER.tar.gz"
+	echo "Backup done! Archive created at $TODAY_FOLDER.tar.gz" | log "INFO"
 fi
 
 # A confirmation email is sent to notify the responsible person.
 # The log file is attached.
 if [ "$RECIPIENT" != "" ];then
-  echo "The Backup with timestam $TODAY_FOLDER is done!\
+  echo "The Backup with timestam $TODAY_FOLDER is done!\ | log "INFO"
   Checkout the attached log file for details."  | mail -s "Backup complete" -a "$STDOUT_LOG" -r "$SENDER" "$RECIPIENT"
   rm "$STDOUT_LOG"
 else
-  echo "Done! Checkout the log at $STDOUT_LOG"
+  echo "Done! Checkout the log at $STDOUT_LOG" | log "INFO"
 fi
