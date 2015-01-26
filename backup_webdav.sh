@@ -115,6 +115,7 @@ function read_configuration_value {
 		echo "Using value from configuration file for $configuration_name" | log "DEBUG"
 	fi
 
+	echo "Set $configuration_name=$value" | log "DEBUG"
 	export "$configuration_name=$value"
 
 	# Stop execution if a required varaible is empty/not set
@@ -122,6 +123,7 @@ function read_configuration_value {
 		echo "No value set for configuration $configuration_name. Please provide one in a config file or inside the script"
 		exit 1
 	fi
+
 }
 # ## Log Method
 # The log method allows to pipe standart output into a parsable logger output.
@@ -246,7 +248,7 @@ MIRROR_DIRECTORY="$LOCAL_BACKUP_DESTINATION/mirror"
 
 PREVIOUS_FILE=""
 if [ -d "$LOCAL_BACKUP_DESTINATION" ]; then
-	PREVIOUS_FILE=$(find "$LOCAL_BACKUP_DESTINATION" -maxdepth 1 -type f | sort | awk '/./{line=$0} END{print line}')
+	PREVIOUS_FILE=$(find "$LOCAL_BACKUP_DESTINATION" -maxdepth 1 -name "*.tar.gz" -type f | sort | awk '/./{line=$0} END{print line}')
 fi
 
 # The existance of the mirror directory is evaluated.
