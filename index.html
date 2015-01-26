@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#x61;&#x69;&#x6C;&#x74;&#111;:&#100;&#x65;&#x76;&#x65;l&#111;&#x70;&#x6D;&#101;&#110;&#116;&#64;&#114;&#x61;&#x70;&#104;&#97;&#101;&#108;.&#108;i">&#100;&#x65;&#x76;&#x65;l&#111;&#x70;&#x6D;&#101;&#110;&#116;&#64;&#114;&#x61;&#x70;&#104;&#97;&#101;&#108;.&#108;i</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#x61;&#105;&#x6C;t&#x6F;:&#100;&#x65;&#118;&#x65;&#x6C;&#111;p&#x6D;&#101;&#x6E;&#x74;&#64;&#x72;&#x61;&#x70;&#104;&#97;&#x65;&#108;&#x2E;&#x6C;i">&#100;&#x65;&#118;&#x65;&#x6C;&#111;p&#x6D;&#101;&#x6E;&#x74;&#64;&#x72;&#x61;&#x70;&#104;&#97;&#x65;&#108;&#x2E;&#x6C;i</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -18,11 +18,9 @@
 <h2>TODO</h2>
 
 <ul>
-<li>Write the whole Duration into the mail!</li>
 <li>Run script as root - OR how can webdav be mounted else?</li>
 <li>Check if the mountpoint is empty</li>
 <li>Rename/Refactor the <code>Main Code</code> section. Fucntion?</li>
-<li>Rename variables (TODAY) and stuff like this</li>
 <li>Fix Extend usage/prerequisites</li>
 </ul>
 
@@ -76,15 +74,37 @@ the backup_cert with the name of the previously copied certificate name.</p>
 
 <p>You must also have setup mail properly!</p>
 
-<h2>Configuration</h2>
-
-<p>The configuration file to read specific values from.
-By default, the first argument of the script is used here.</p>
-
 <div class="highlight"><pre>
 <span class="c">#!/usr/bin/env bash</span>
 <span class="c">#set -e</span>
+
+</pre></div>
+
+<h2>Duration</h2>
+
+<p>The complete duration of the script is measured and sent via E-Mail (if configured).</p>
+
+<div class="highlight"><pre>
+<span class="nv">START</span><span class="o">=</span><span class="k">$(</span>date +%s<span class="k">)</span>
+
+</pre></div>
+
+<h2>Configuration</h2>
+
+<p>The configuration file to read specific values from.
+By default, the first argument of the script is used here.
+It's also possible to define the path to the config file via the environment
+variable "BACKUP<em>WEBDAV</em>CONFIGURATION_FILE"</p>
+
+<div class="highlight"><pre>
 <span class="nv">configfile</span><span class="o">=</span><span class="nv">$1</span>
+<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$configfile</span><span class="s2">&quot;</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
+	<span class="nv">env_value</span><span class="o">=</span><span class="k">$(</span>printenv BACKUP_WEBDAV_CONFIGURATION_FILE<span class="k">)</span>
+	<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$env_value</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
+		<span class="nv">configfile</span><span class="o">=</span><span class="nv">$env_value</span>
+	<span class="k">fi</span>
+<span class="k">fi</span>
+
 </pre></div>
 
 <h2>Read Configurations Method</h2>
@@ -98,7 +118,8 @@ If "true" is passed as a second argument, the</p>
 
 <div class="highlight"><pre>
 <span class="k">function</span> read_configuration_value <span class="o">{</span>
-	<span class="nv">configuration_name</span><span class="o">=</span><span class="nv">$1</span>
+	<span class="nv">configuration_name</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span>
+	<span class="nv">default_value</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$3</span><span class="s2">&quot;</span>
 
 </pre></div>
 
@@ -109,7 +130,7 @@ assign it</p>
 	<span class="k">if</span> <span class="o">[</span> -f <span class="s2">&quot;</span><span class="nv">$configfile</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
 		<span class="nv">variable</span><span class="o">=</span><span class="k">$(</span>sed -n <span class="s2">&quot;s/^</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span> <span class="s2">&quot;</span><span class="nv">$configfile</span><span class="s2">&quot;</span><span class="k">)</span>
 		<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$variable</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
-			<span class="nb">eval</span> <span class="s2">&quot;</span><span class="nv">$configuration_name</span><span class="s2">&quot;</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$variable</span><span class="s2">&quot;</span> <span class="c"># Aahhhrg! Eval is Evil!</span>
+			<span class="nb">eval</span> <span class="s2">&quot;cfg_</span><span class="nv">$configuration_name</span><span class="s2">&quot;</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$variable</span><span class="s2">&quot;</span> <span class="c"># Aahhhrg! Eval is Evil!</span>
 		<span class="k">fi</span>
 	<span class="k">fi</span>
 
@@ -121,8 +142,28 @@ the contents of the variable with the name.</p>
 <div class="highlight"><pre>
 	<span class="nv">required</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="s2">&quot;</span><span class="nv">$2</span><span class="s2">&quot;</span> <span class="p">|</span> awk <span class="s1">&#39;{print tolower($0)}&#39;</span><span class="k">)</span>
 
-	<span class="nv">value</span><span class="o">=</span><span class="k">$(</span><span class="nb">set</span> -o posix <span class="p">;</span> <span class="nb">set</span> <span class="p">|</span> sed -n <span class="s2">&quot;s/^</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span><span class="k">)</span>
+</pre></div>
 
+<p>The alue from the config file</p>
+
+<div class="highlight"><pre>
+	<span class="nv">value</span><span class="o">=</span><span class="k">$(</span><span class="nb">set</span> -o posix <span class="p">;</span> <span class="nb">set</span> <span class="p">|</span> sed -n <span class="s2">&quot;s/^cfg_</span><span class="nv">$configuration_name</span><span class="s2">= *//p&quot;</span><span class="k">)</span>
+
+	<span class="nv">env_value</span><span class="o">=</span><span class="k">$(</span>printenv <span class="s2">&quot;</span><span class="nv">$configuration_name</span><span class="s2">&quot;</span><span class="k">)</span>
+
+	<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$value</span><span class="s2">&quot;</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
+		<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$env_value</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
+			<span class="nb">echo</span> <span class="s2">&quot;Using value from environment for </span><span class="nv">$configuration_name</span><span class="s2">&quot;</span> <span class="p">|</span> log <span class="s2">&quot;DEBUG&quot;</span>
+			<span class="nv">value</span><span class="o">=</span><span class="nv">$env_value</span>
+		<span class="k">else</span>
+			<span class="nb">echo</span> <span class="s2">&quot;Using default value for </span><span class="nv">$configuration_name</span><span class="s2">&quot;</span> <span class="p">|</span> log <span class="s2">&quot;DEBUG&quot;</span>
+			<span class="nv">value</span><span class="o">=</span><span class="nv">$default_value</span>
+		<span class="k">fi</span>
+	<span class="k">else</span>
+		<span class="nb">echo</span> <span class="s2">&quot;Using value from configuration file for </span><span class="nv">$configuration_name</span><span class="s2">&quot;</span> <span class="p">|</span> log <span class="s2">&quot;DEBUG&quot;</span>
+	<span class="k">fi</span>
+
+	<span class="nb">export</span> <span class="s2">&quot;</span><span class="nv">$configuration_name</span><span class="s2">=</span><span class="nv">$value</span><span class="s2">&quot;</span>
 
 </pre></div>
 
@@ -134,10 +175,19 @@ the contents of the variable with the name.</p>
 		<span class="nb">exit </span>1
 	<span class="k">fi</span>
 <span class="o">}</span>
+</pre></div>
+
+<h2>Log Method</h2>
+
+<p>The log method allows to pipe standart output into a parsable logger output.
+The log method takes an argument which is the log level (eg. INFO, ERROR etc.)
+as well as an optional prefix, eg "RSYNC" to indicate a sub-sequence of the program.
+eg. echo "Hello world" | log "INFO"</p>
+
+<div class="highlight"><pre>
 <span class="k">function</span> log<span class="o">()</span> <span class="o">{</span>
 	<span class="nv">level</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span> <span class="p">|</span> awk <span class="s1">&#39;{print toupper($0)}&#39;</span><span class="k">)</span>
 	<span class="nv">prefix</span><span class="o">=</span><span class="s2">&quot;[</span><span class="nv">$2</span><span class="s2">] &quot;</span>
-	<span class="nv">timestamp</span><span class="o">=</span><span class="k">$(</span>date +<span class="s1">&#39;%d/%b/%Y:%X %z&#39;</span><span class="k">)</span>
 
 </pre></div>
 
@@ -169,10 +219,27 @@ the contents of the variable with the name.</p>
 
 <div class="highlight"><pre>
 		<span class="k">if</span> <span class="o">[</span> <span class="se">\(</span> <span class="s2">&quot;</span><span class="nv">$VERBOSE</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;false&quot;</span> -a <span class="s2">&quot;</span><span class="nv">$level</span><span class="s2">&quot;</span> <span class="o">==</span> <span class="s2">&quot;DEBUG&quot;</span> <span class="se">\)</span> -o <span class="s2">&quot;</span><span class="nv">$level</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;DEBUG&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+			<span class="nv">timestamp</span><span class="o">=</span><span class="k">$(</span>date +<span class="s1">&#39;%d/%b/%Y:%X %z&#39;</span><span class="k">)</span>
 			<span class="nb">printf</span> <span class="s2">&quot;[%-5s] [%s] %s%s\n&quot;</span> <span class="s2">&quot;</span><span class="nv">$level</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$timestamp</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$prefix</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$data</span><span class="s2">&quot;</span>
 		<span class="k">fi</span>
 	<span class="k">done</span>
 <span class="o">}</span>
+
+</pre></div>
+
+<h2>convertsecs Method</h2>
+
+<p>This method is used to convert the total duration into
+a human readable format: hh:mm:ss.</p>
+
+<div class="highlight"><pre>
+convertsecs<span class="o">()</span> <span class="o">{</span>
+	<span class="nv">h</span><span class="o">=</span><span class="k">$((</span><span class="nv">$1</span> <span class="o">/</span> <span class="m">3600</span><span class="k">))</span>
+	<span class="nv">m</span><span class="o">=</span><span class="k">$((</span><span class="nv">$1</span>  <span class="o">%</span> <span class="m">3600</span> <span class="o">/</span> <span class="m">60</span><span class="k">))</span>
+	<span class="nv">s</span><span class="o">=</span><span class="k">$((</span><span class="nv">$1</span> <span class="o">%</span> <span class="m">60</span><span class="k">))</span>
+	<span class="nb">printf</span> <span class="s2">&quot;%02d:%02d:%02d\n&quot;</span> <span class="s2">&quot;</span><span class="nv">$h</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$m</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$s</span><span class="s2">&quot;</span>
+<span class="o">}</span>
+
 
 </pre></div>
 
@@ -181,8 +248,8 @@ for example <code>https://example.com:80</code>.
 <em>Please do not add a trailing slash.</em></p>
 
 <div class="highlight"><pre>
-<span class="nv">DAV_URL</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-read_configuration_value <span class="s1">&#39;DAV_URL&#39;</span> <span class="nb">true</span>
+<span class="c">#DAV_URL=&quot;&quot;</span>
+read_configuration_value <span class="s1">&#39;DAV_URL&#39;</span> <span class="nb">true</span> <span class="s2">&quot;&quot;</span>
 
 </pre></div>
 
@@ -193,16 +260,14 @@ use RSYNC<em>OPTIONS.
 _Please do not add a trailing slash.</em></p>
 
 <div class="highlight"><pre>
-<span class="nv">DAV_SOURCE</span><span class="o">=</span><span class="s2">&quot;/&quot;</span>
-read_configuration_value <span class="s1">&#39;DAV_SOURCE&#39;</span> <span class="nb">true</span>
+read_configuration_value <span class="s1">&#39;DAV_SOURCE&#39;</span> <span class="nb">true</span> <span class="s2">&quot;/&quot;</span>
 
 </pre></div>
 
 <p><code>DAV_USER</code> represents the name of the user to connect to the webdav share.</p>
 
 <div class="highlight"><pre>
-<span class="nv">DAV_USER</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-read_configuration_value <span class="s1">&#39;DAV_USER&#39;</span> <span class="nb">true</span>
+read_configuration_value <span class="s1">&#39;DAV_USER&#39;</span> <span class="nb">true</span> <span class="s2">&quot;&quot;</span>
 
 </pre></div>
 
@@ -210,8 +275,7 @@ read_configuration_value <span class="s1">&#39;DAV_USER&#39;</span> <span class=
 to the webdav share. Yes, plain text passwords ARE evil ... :(</p>
 
 <div class="highlight"><pre>
-<span class="nv">DAV_PASSWORD</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-read_configuration_value <span class="s1">&#39;DAV_PASSWORD&#39;</span>  <span class="nb">true</span>
+read_configuration_value <span class="s1">&#39;DAV_PASSWORD&#39;</span>  <span class="nb">true</span> <span class="s2">&quot;&quot;</span>
 
 </pre></div>
 
@@ -219,16 +283,14 @@ read_configuration_value <span class="s1">&#39;DAV_PASSWORD&#39;</span>  <span c
 If this variable is empty, no email is sent.</p>
 
 <div class="highlight"><pre>
-<span class="nv">RECIPIENT</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-read_configuration_value <span class="s1">&#39;RECIPIENT&#39;</span> <span class="nb">false</span>
+read_configuration_value <span class="s1">&#39;RECIPIENT&#39;</span> <span class="nb">false</span> <span class="s2">&quot;&quot;</span>
 
 </pre></div>
 
 <p>The <code>SENDER</code> E-Mail adress is passed to <code>mail</code> to be used as sender address.</p>
 
 <div class="highlight"><pre>
-<span class="nv">SENDER</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-read_configuration_value <span class="s1">&#39;SENDER&#39;</span> <span class="nb">false</span>
+read_configuration_value <span class="s1">&#39;SENDER&#39;</span> <span class="nb">false</span> <span class="s2">&quot;&quot;</span>
 
 </pre></div>
 
@@ -237,8 +299,7 @@ mountet temporarly. Note that this directory must be empty if it already exists.
 <em>Please do not add a trailing slash.</em></p>
 
 <div class="highlight"><pre>
-<span class="nv">LOCAL_MOUNTPOINT</span><span class="o">=</span><span class="s2">&quot;/mnt/backup&quot;</span>
-read_configuration_value <span class="s1">&#39;LOCAL_MOUNTPOINT&#39;</span> <span class="nb">true</span>
+read_configuration_value <span class="s1">&#39;LOCAL_MOUNTPOINT&#39;</span> <span class="nb">true</span> <span class="s2">&quot;/mnt/backup&quot;</span>
 
 </pre></div>
 
@@ -249,8 +310,7 @@ other data. This could potentially break the script.
 <em>Please do not add a trailing slash.</em></p>
 
 <div class="highlight"><pre>
-<span class="nv">LOCAL_BACKUP_DESTINATION</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-read_configuration_value <span class="s1">&#39;LOCAL_BACKUP_DESTINATION&#39;</span> <span class="nb">true</span>
+read_configuration_value <span class="s1">&#39;LOCAL_BACKUP_DESTINATION&#39;</span> <span class="nb">true</span> <span class="s2">&quot;/backup&quot;</span>
 
 </pre></div>
 
@@ -261,8 +321,7 @@ Checkout the rsync documentation for further details.
 shellcheck disable=SC2089</p>
 
 <div class="highlight"><pre>
-<span class="nv">RSYNC_OPTIONS</span><span class="o">=</span><span class="s2">&quot;-avzh --delete&quot;</span>
-read_configuration_value <span class="s1">&#39;RSYNC_OPTIONS&#39;</span> <span class="nb">true</span>
+read_configuration_value <span class="s1">&#39;RSYNC_OPTIONS&#39;</span> <span class="nb">true</span> <span class="s2">&quot;-avzh --delete&quot;</span>
 <span class="nv">IFS</span><span class="o">=</span><span class="s1">&#39; &#39;</span> <span class="nb">read</span> -a RSYNC_OPTIONS <span class="o">&lt;&lt;&lt;</span> <span class="s2">&quot;</span><span class="nv">$RSYNC_OPTIONS</span><span class="s2">&quot;</span> <span class="c"># Convert the string int an array (See: SC2089)</span>
 
 </pre></div>
@@ -271,9 +330,8 @@ read_configuration_value <span class="s1">&#39;RSYNC_OPTIONS&#39;</span> <span c
 mirror directory. The mirror directory will not be archived in this case!</p>
 
 <div class="highlight"><pre>
-<span class="nv">MIRROR_ONLY</span><span class="o">=</span><span class="s2">&quot;false&quot;</span>
-read_configuration_value <span class="s1">&#39;MIRROR_ONLY&#39;</span> <span class="nb">false</span>
-<span class="nv">MIRROR_ONLY</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="nv">$MIRROR_ONLY</span> <span class="p">|</span> awk <span class="s1">&#39;{print tolower($0)}&#39;</span><span class="k">)</span>
+read_configuration_value <span class="s1">&#39;MIRROR_ONLY&#39;</span> <span class="nb">false</span> <span class="s2">&quot;false&quot;</span>
+<span class="nv">MIRROR_ONLY</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="s2">&quot;</span><span class="nv">$MIRROR_ONLY</span><span class="s2">&quot;</span> <span class="p">|</span> awk <span class="s1">&#39;{print tolower($0)}&#39;</span><span class="k">)</span>
 
 
 </pre></div>
@@ -283,9 +341,8 @@ show up in the standart output. If set to true, it will logged as DEBUG log with
 rsync prefix.</p>
 
 <div class="highlight"><pre>
-<span class="nv">VERBOSE</span><span class="o">=</span><span class="s2">&quot;true&quot;</span>
-read_configuration_value <span class="s1">&#39;VERBOSE&#39;</span> <span class="nb">true</span>
-<span class="nv">VERBOSE</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="nv">$VERBOSE</span> <span class="p">|</span> awk <span class="s1">&#39;{print tolower($0)}&#39;</span><span class="k">)</span>
+read_configuration_value <span class="s1">&#39;VERBOSE&#39;</span> <span class="nb">true</span> <span class="s2">&quot;true&quot;</span>
+<span class="nv">VERBOSE</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="s2">&quot;</span><span class="nv">$VERBOSE</span><span class="s2">&quot;</span> <span class="p">|</span> awk <span class="s1">&#39;{print tolower($0)}&#39;</span><span class="k">)</span>
 
 </pre></div>
 
@@ -379,15 +436,14 @@ if it does not yet exist.</p>
 <span class="k">if</span> <span class="o">[</span> ! -d <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
 	mkdir -p <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span>
 <span class="k">fi</span>
-
 </pre></div>
 
 <p>Next, the webdav share is mounted.</p>
 
 <div class="highlight"><pre>
 <span class="nb">echo</span> <span class="s2">&quot;Mounting webdav share....&quot;</span> <span class="p">|</span> log <span class="s2">&quot;INFO&quot;</span>
-sudo mount -t davfs <span class="nv">$DAV_URL$DAV_SOURCE</span>/ <span class="nv">$LOCAL_MOUNTPOINT</span><span class="o">&lt;&lt;&lt;</span><span class="s2">&quot;</span><span class="nv">$DAV_USER</span><span class="s2"></span>
-<span class="nv">$DAV_PASSWORD</span><span class="s2">&quot;</span> <span class="p">|</span> sudo tee -a <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> &gt; /dev/null
+mount -t davfs <span class="s2">&quot;</span><span class="nv">$DAV_URL$DAV_SOURCE</span><span class="s2">/&quot;</span> <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span><span class="o">&lt;&lt;&lt;</span><span class="s2">&quot;</span><span class="nv">$DAV_USER</span><span class="s2"></span>
+<span class="nv">$DAV_PASSWORD</span><span class="s2">&quot;</span> <span class="p">|</span> tee -a <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> &gt; /dev/null
 <span class="c">#&quot;</span>
 
 </pre></div>
@@ -413,7 +469,7 @@ Afterwards, the Info messages (STDOUT) are passed to the log function and so are
 
 <div class="highlight"><pre>
 <span class="nb">echo</span> <span class="s2">&quot;Unmount the webdav share...&quot;</span> <span class="p">|</span> log <span class="s2">&quot;INFO&quot;</span>
-sudo umount <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span> <span class="p">|</span> tee -a <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> &gt; /dev/null
+umount <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</span><span class="s2">&quot;</span> <span class="p">|</span> tee -a <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> &gt; /dev/null
 
 <span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$MIRROR_ONLY</span><span class="s2">&quot;</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
 	<span class="nb">echo</span> <span class="s2">&quot;Skipping archive creation (mirror-only mode is on)&quot;</span> <span class="p">|</span> log <span class="s2">&quot;INFO&quot;</span>
@@ -430,6 +486,9 @@ sudo umount <span class="s2">&quot;</span><span class="nv">$LOCAL_MOUNTPOINT</sp
 	<span class="nb">echo</span> <span class="s2">&quot;Backup done! Archive created at </span><span class="nv">$TODAY_FOLDER</span><span class="s2">.tar.gz&quot;</span> <span class="p">|</span> log <span class="s2">&quot;INFO&quot;</span>
 <span class="k">fi</span>
 
+<span class="nv">END</span><span class="o">=</span><span class="k">$(</span>date +%s<span class="k">)</span>
+<span class="nv">runtime</span><span class="o">=</span><span class="k">$(</span>convertsecs <span class="k">$((</span>END-START<span class="k">)))</span>
+
 </pre></div>
 
 <p>A confirmation email is sent to notify the responsible person.
@@ -437,11 +496,13 @@ The log file is attached.</p>
 
 <div class="highlight"><pre>
 <span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$RECIPIENT</span><span class="s2">&quot;</span> !<span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span><span class="k">then</span>
-  <span class="nb">echo</span> <span class="s2">&quot;The Backup with timestam </span><span class="nv">$TODAY_FOLDER</span><span class="s2"> is done!\ | log &quot;</span>INFO<span class="s2">&quot;</span>
-<span class="s2">  Checkout the attached log file for details.&quot;</span>  <span class="p">|</span> mail -s <span class="s2">&quot;Backup complete&quot;</span> -a <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> -r <span class="s2">&quot;</span><span class="nv">$SENDER</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$RECIPIENT</span><span class="s2">&quot;</span>
+  <span class="nv">message</span><span class="o">=</span><span class="k">$(</span><span class="nb">printf</span> <span class="s2">&quot;The Backup with timestamp %s is done! Overall duration: %s. Rsync result output:\\n\\n&quot;</span> <span class="s2">&quot;</span><span class="nv">$TODAY_FOLDER</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$runtime</span><span class="s2">&quot;</span><span class="k">)</span>
+  <span class="nb">printf</span> <span class="s2">&quot;To:%s \nFrom:%s\nSubject: %s\n\n%s&quot;</span> <span class="s2">&quot;</span><span class="nv">$RECIPIENT</span><span class="s2">&quot;</span> <span class="s2">&quot;</span><span class="nv">$SENDER</span><span class="s2">&quot;</span> <span class="s2">&quot;Backup complete!&quot;</span> <span class="s2">&quot;</span><span class="nv">$message</span><span class="s2">&quot;</span> <span class="p">|</span> cat - <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> <span class="p">|</span>ssmtp <span class="s2">&quot;</span><span class="nv">$RECIPIENT</span><span class="s2">&quot;</span>
+
   rm <span class="s2">&quot;</span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span>
 <span class="k">else</span>
-  <span class="nb">echo</span> <span class="s2">&quot;Done! Checkout the log at </span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> <span class="p">|</span> log <span class="s2">&quot;INFO&quot;</span>
+  <span class="nb">echo</span> <span class="s2">&quot;Done ! Checkout the log at </span><span class="nv">$STDOUT_LOG</span><span class="s2">&quot;</span> <span class="p">|</span> log <span class="s2">&quot;INFO&quot;</span>
+  <span class="nb">echo</span> <span class="s2">&quot;Duration: </span><span class="nv">$runtime</span><span class="s2">&quot;</span> <span class="p">|</span> log <span class="s2">&quot;INFO&quot;</span>
 <span class="k">fi</span>
 
 
