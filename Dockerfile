@@ -1,7 +1,7 @@
 FROM ubuntu:latest
 
 # Install rsync and davfs2
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -yqq
 RUN apt-get install rsync -yqq
 RUN apt-get install davfs2 -yqq
