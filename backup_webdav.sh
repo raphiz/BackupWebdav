@@ -7,11 +7,9 @@
 # Copyright (c) 2014, Raphael Zimmermann, All rights reserved.
 #
 # ## TODO
-# * Write the whole Duration into the mail!
 # * Run script as root - OR how can webdav be mounted else?
 # * Check if the mountpoint is empty
 # * Rename/Refactor the `Main Code` section. Fucntion?
-# * Rename variables (TODAY) and stuff like this
 # * Fix Extend usage/prerequisites
 #
 #
@@ -55,12 +53,26 @@
 #
 # ### Setup `mail` (optional)
 # You must also have setup mail properly!
+
+# ## Duration
+# The complete duration of the script is measured and sent via E-Mail (if configured).
+START=$(date +%s)
+
 #
 # ## Configuration
 #
 # The configuration file to read specific values from.
 # By default, the first argument of the script is used here.
+# It's also possible to define the path to the config file via the environment
+# variable "BACKUP_WEBDAV_CONFIGURATION_FILE"
 configfile=$1
+if [ "$configfile" == "" ];then
+	env_value=$(printenv BACKUP_WEBDAV_CONFIGURATION_FILE)
+	if [ "$env_value" != "" ];then
+		configfile=$env_value
+	fi
+fi
+
 #
 # ## Read Configurations Method
 # A secure way to read configuration values from a given configuration file.
@@ -70,14 +82,15 @@ configfile=$1
 # defined value of the configuration file.
 # If "true" is passed as a second argument, the
 function read_configuration_value {
-	configuration_name=$1
+	configuration_name="$1"
+	default_value="$3"
 
 	# If a configuration file is provided, parse the given value and
 	# assign it
 	if [ -f "$configfile" ]; then
 		variable=$(sed -n "s/^$configuration_name= *//p" "$configfile")
 		if [ "$variable" != "" ];then
-			eval "$configuration_name"="$variable" # Aahhhrg! Eval is Evil!
+			eval "cfg_$configuration_name"="$variable" # Aahhhrg! Eval is Evil!
 		fi
 	fi
 
@@ -85,8 +98,24 @@ function read_configuration_value {
 	# the contents of the variable with the name.
 	required=$(echo "$2" | awk '{print tolower($0)}')
 
-	value=$(set -o posix ; set | sed -n "s/^$configuration_name= *//p")
+	# The alue from the config file
+	value=$(set -o posix ; set | sed -n "s/^cfg_$configuration_name= *//p")
 
+	env_value=$(printenv "$configuration_name")
+
+	if [ "$value" == "" ];then
+		if [ "$env_value" != "" ];then
+			echo "Using value from environment for $configuration_name" | log "DEBUG"
+			value=$env_value
+		else
+			echo "Using default value for $configuration_name" | log "DEBUG"
+			value=$default_value
+		fi
+	else
+		echo "Using value from configuration file for $configuration_name" | log "DEBUG"
+	fi
+
+	export "$configuration_name=$value"
 
 	# Stop execution if a required varaible is empty/not set
 	if [ "$required" == "true"  ] && [ "$value" == "" ];then
@@ -94,10 +123,14 @@ function read_configuration_value {
 		exit 1
 	fi
 }
+# ## Log Method
+# The log method allows to pipe standart output into a parsable logger output.
+# The log method takes an argument which is the log level (eg. INFO, ERROR etc.)
+# as well as an optional prefix, eg "RSYNC" to indicate a sub-sequence of the program.
+# eg. echo "Hello world" | log "INFO"
 function log() {
 	level=$(echo "$1" | awk '{print toupper($0)}')
 	prefix="[$2] "
-	timestamp=$(date +'%d/%b/%Y:%X %z')
 
 	# If the prefix is emtpy, remove the brackets
 	if [ "$prefix" == "[] " ]; then
@@ -113,79 +146,81 @@ function log() {
 
 		# Log if debug is enabled or log level is not debug
 		if [ \( "$VERBOSE" != "false" -a "$level" == "DEBUG" \) -o "$level" != "DEBUG" ]; then
+			timestamp=$(date +'%d/%b/%Y:%X %z')
 			printf "[%-5s] [%s] %s%s\n" "$level" "$timestamp" "$prefix" "$data"
 		fi
 	done
 }
 
+# ## convertsecs Method
+# This method is used to convert the total duration into
+# a human readable format: hh:mm:ss.
+convertsecs() {
+	h=$(($1 / 3600))
+	m=$(($1  % 3600 / 60))
+	s=$(($1 % 60))
+	printf "%02d:%02d:%02d\n" "$h" "$m" "$s"
+}
+
+
 # The variable `DAV_URL` contains the address of the webdav share to backup,
 # for example `https://example.com:80`.
 # _Please do not add a trailing slash._
-DAV_URL=""
-read_configuration_value 'DAV_URL' true
+#DAV_URL=""
+read_configuration_value 'DAV_URL' true ""
 
 # The `DAV_SOURCE` contains a relative path on the webdav share
 # pointing to the directory to backup. If the whole share shall
 # be backed up, leave this empty. If files/directories must be excluded,
 # use RSYNC_OPTIONS.
 # _Please do not add a trailing slash._
-DAV_SOURCE="/"
-read_configuration_value 'DAV_SOURCE' true
+read_configuration_value 'DAV_SOURCE' true "/"
 
 # `DAV_USER` represents the name of the user to connect to the webdav share.
-DAV_USER=""
-read_configuration_value 'DAV_USER' true
+read_configuration_value 'DAV_USER' true ""
 
 # The `DAV_PASSWORD` variable contains the password of the user used to connect
 # to the webdav share. Yes, plain text passwords ARE evil ... :(
-DAV_PASSWORD=""
-read_configuration_value 'DAV_PASSWORD'  true
+read_configuration_value 'DAV_PASSWORD'  true ""
 
 # An email is sent at the end to the `RECIPIENT` address using the `mail` command.
 # If this variable is empty, no email is sent.
-RECIPIENT=""
-read_configuration_value 'RECIPIENT' false
+read_configuration_value 'RECIPIENT' false ""
 
 # The `SENDER` E-Mail adress is passed to `mail` to be used as sender address.
-SENDER=""
-read_configuration_value 'SENDER' false
+read_configuration_value 'SENDER' false ""
 
 # The `LOCAL_MOUNTPOINT` points to where in the local file system the webdav share will be
 # mountet temporarly. Note that this directory must be empty if it already exists.
 # _Please do not add a trailing slash._
-LOCAL_MOUNTPOINT="/mnt/backup"
-read_configuration_value 'LOCAL_MOUNTPOINT' true
+read_configuration_value 'LOCAL_MOUNTPOINT' true "/mnt/backup"
 
 # The backup archives as well as a directory called mirror will be stored
 # in `LOCAL_BACKUP_DESTINATION`. This is the effective backup destination.
 # This directory should ONLY be used for this script and not contain any
 # other data. This could potentially break the script.
 # _Please do not add a trailing slash._
-LOCAL_BACKUP_DESTINATION=""
-read_configuration_value 'LOCAL_BACKUP_DESTINATION' true
+read_configuration_value 'LOCAL_BACKUP_DESTINATION' true "/backup"
 
 # The `RSYNC_OPTIONS` are passed directly to rsync. `-avzh --deleted`
 # is the highly recommended
 # default. If this is modified wrongly, the script might not work properly anymore - so be careful!
 # Checkout the rsync documentation for further details.
 # shellcheck disable=SC2089
-RSYNC_OPTIONS="-avzh --delete"
-read_configuration_value 'RSYNC_OPTIONS' true
+read_configuration_value 'RSYNC_OPTIONS' true "-avzh --delete"
 IFS=' ' read -a RSYNC_OPTIONS <<< "$RSYNC_OPTIONS" # Convert the string int an array (See: SC2089)
 
 # If the `MIRROR_ONLY` value is set to true, the webdav share is only mirrored to the
 # mirror directory. The mirror directory will not be archived in this case!
-MIRROR_ONLY="false"
-read_configuration_value 'MIRROR_ONLY' false
-MIRROR_ONLY=$(echo $MIRROR_ONLY | awk '{print tolower($0)}')
+read_configuration_value 'MIRROR_ONLY' false "false"
+MIRROR_ONLY=$(echo "$MIRROR_ONLY" | awk '{print tolower($0)}')
 
 
 # If the `VERBOSE` value is set to false, the output of the rsync command will not
 # show up in the standart output. If set to true, it will logged as DEBUG log with the
 # rsync prefix.
-VERBOSE="true"
-read_configuration_value 'VERBOSE' true
-VERBOSE=$(echo $VERBOSE | awk '{print tolower($0)}')
+read_configuration_value 'VERBOSE' true "true"
+VERBOSE=$(echo "$VERBOSE" | awk '{print tolower($0)}')
 
 # ## Main
 # The configuration section ENDS here...Do not modify the following contents unless
@@ -246,11 +281,10 @@ fi
 if [ ! -d "$LOCAL_MOUNTPOINT" ]; then
 	mkdir -p "$LOCAL_MOUNTPOINT"
 fi
-
 # Next, the webdav share is mounted.
 echo "Mounting webdav share...." | log "INFO"
-sudo mount -t davfs $DAV_URL$DAV_SOURCE/ $LOCAL_MOUNTPOINT<<<"$DAV_USER
-$DAV_PASSWORD" | sudo tee -a "$STDOUT_LOG" > /dev/null
+mount -t davfs "$DAV_URL$DAV_SOURCE/" "$LOCAL_MOUNTPOINT"<<<"$DAV_USER
+$DAV_PASSWORD" | tee -a "$STDOUT_LOG" > /dev/null
 #"
 
 # After succesful mounting, the begin with the rsync syncronization.
@@ -264,7 +298,7 @@ echo "Mirroring webdav share...(this can take a veeeery long time...)" | log "IN
 
 # After the sync is done, the webdav share can be unmounted.
 echo "Unmount the webdav share..." | log "INFO"
-sudo umount "$LOCAL_MOUNTPOINT" | tee -a "$STDOUT_LOG" > /dev/null
+umount "$LOCAL_MOUNTPOINT" | tee -a "$STDOUT_LOG" > /dev/null
 
 if [ "$MIRROR_ONLY" == "true" ]; then
 	echo "Skipping archive creation (mirror-only mode is on)" | log "INFO"
@@ -277,12 +311,17 @@ else
 	echo "Backup done! Archive created at $TODAY_FOLDER.tar.gz" | log "INFO"
 fi
 
+END=$(date +%s)
+runtime=$(convertsecs $((END-START)))
+
 # A confirmation email is sent to notify the responsible person.
 # The log file is attached.
 if [ "$RECIPIENT" != "" ];then
-  echo "The Backup with timestam $TODAY_FOLDER is done!\ | log "INFO"
-  Checkout the attached log file for details."  | mail -s "Backup complete" -a "$STDOUT_LOG" -r "$SENDER" "$RECIPIENT"
+  message=$(printf "The Backup with timestamp %s is done! Overall duration: %s. Rsync result output:\\n\\n" "$TODAY_FOLDER" "$runtime")
+  printf "To:%s \nFrom:%s\nSubject: %s\n\n%s" "$RECIPIENT" "$SENDER" "Backup complete!" "$message" | cat - "$STDOUT_LOG" |ssmtp "$RECIPIENT"
+
   rm "$STDOUT_LOG"
 else
-  echo "Done! Checkout the log at $STDOUT_LOG" | log "INFO"
+  echo "Done ! Checkout the log at $STDOUT_LOG" | log "INFO"
+  echo "Duration: $runtime" | log "INFO"
 fi
