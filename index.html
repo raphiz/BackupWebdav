@@ -9,7 +9,7 @@
 <div class="container">
   <div class="page">
         <div class="header"><h1>backup_webdav.sh</h1></div>
-        <p><strong>Author</strong> Raphael Zimmermann <a href="&#109;&#97;&#105;&#x6C;&#116;&#111;:&#100;&#x65;&#118;&#x65;&#108;&#111;&#x70;&#x6D;&#101;&#110;&#x74;&#64;&#x72;&#x61;&#x70;h&#97;&#x65;&#108;&#x2E;&#x6C;&#105;">&#100;&#x65;&#118;&#x65;&#108;&#111;&#x70;&#x6D;&#101;&#110;&#x74;&#64;&#x72;&#x61;&#x70;h&#97;&#x65;&#108;&#x2E;&#x6C;&#105;</a></p>
+        <p><strong>Author</strong> Raphael Zimmermann <a href="&#x6D;a&#105;&#108;&#x74;&#x6F;:&#x64;&#101;&#118;&#x65;&#108;&#x6F;&#112;&#x6D;&#101;&#x6E;t&#64;&#x72;&#97;p&#x68;&#97;&#x65;&#x6C;&#46;&#108;&#x69;">&#x64;&#101;&#118;&#x65;&#108;&#x6F;&#112;&#x6D;&#101;&#x6E;t&#64;&#x72;&#97;p&#x68;&#97;&#x65;&#x6C;&#46;&#108;&#x69;</a></p>
 
 <p><strong>License</strong> <a href="http://opensource.org/licenses/BSD-3-Clause">BSD-3-Clause</a></p>
 
@@ -163,6 +163,7 @@ the contents of the variable with the name.</p>
 		<span class="nb">echo</span> <span class="s2">&quot;Using value from configuration file for </span><span class="nv">$configuration_name</span><span class="s2">&quot;</span> <span class="p">|</span> log <span class="s2">&quot;DEBUG&quot;</span>
 	<span class="k">fi</span>
 
+	<span class="nb">echo</span> <span class="s2">&quot;Set </span><span class="nv">$configuration_name</span><span class="s2">=</span><span class="nv">$value</span><span class="s2">&quot;</span> <span class="p">|</span> log <span class="s2">&quot;DEBUG&quot;</span>
 	<span class="nb">export</span> <span class="s2">&quot;</span><span class="nv">$configuration_name</span><span class="s2">=</span><span class="nv">$value</span><span class="s2">&quot;</span>
 
 </pre></div>
@@ -174,6 +175,7 @@ the contents of the variable with the name.</p>
 		<span class="nb">echo</span> <span class="s2">&quot;No value set for configuration </span><span class="nv">$configuration_name</span><span class="s2">. Please provide one in a config file or inside the script&quot;</span>
 		<span class="nb">exit </span>1
 	<span class="k">fi</span>
+
 <span class="o">}</span>
 </pre></div>
 
@@ -385,7 +387,7 @@ by minimizing the network usage.</p>
 
 <span class="nv">PREVIOUS_FILE</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
 <span class="k">if</span> <span class="o">[</span> -d <span class="s2">&quot;</span><span class="nv">$LOCAL_BACKUP_DESTINATION</span><span class="s2">&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-	<span class="nv">PREVIOUS_FILE</span><span class="o">=</span><span class="k">$(</span>find <span class="s2">&quot;</span><span class="nv">$LOCAL_BACKUP_DESTINATION</span><span class="s2">&quot;</span> -maxdepth <span class="m">1</span> -type f <span class="p">|</span> sort <span class="p">|</span> awk <span class="s1">&#39;/./{line=$0} END{print line}&#39;</span><span class="k">)</span>
+	<span class="nv">PREVIOUS_FILE</span><span class="o">=</span><span class="k">$(</span>find <span class="s2">&quot;</span><span class="nv">$LOCAL_BACKUP_DESTINATION</span><span class="s2">&quot;</span> -maxdepth <span class="m">1</span> -name <span class="s2">&quot;*.tar.gz&quot;</span> -type f <span class="p">|</span> sort <span class="p">|</span> awk <span class="s1">&#39;/./{line=$0} END{print line}&#39;</span><span class="k">)</span>
 <span class="k">fi</span>
 
 </pre></div>
