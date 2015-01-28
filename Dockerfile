@@ -24,6 +24,6 @@ RUN ln -s /backup/cert.pem /etc/davfs2/certs/cert.pem
 # Add crontab config and script
 ADD backup_webdav.sh /cron/backup_webdav.sh
 
-VOLUME '/backup'
+VOLUME /backup
 
 CMD ["devcron.py", "/backup/crontab"]
